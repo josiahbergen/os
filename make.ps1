@@ -104,7 +104,7 @@ function New-Disk {
     Write-Host "Creating disk image..."
     
     $bootloaderFile = "$BOOTLOADER_DIR\bootloader.o"
-    $osFile = "$OS_DIR\sample.o"
+    # $osFile = "$OS_DIR\sample.o"
     
     # Check if bootloader exists
     if (-not (Test-Path $bootloaderFile)) {
@@ -112,11 +112,11 @@ function New-Disk {
         return $false
     }
     
-    # Check if OS kernel exists
-    if (-not (Test-Path $osFile)) {
-        Write-Error "OS kernel not found: $osFile"
-        return $false
-    }    
+    # # Check if OS kernel exists
+    # if (-not (Test-Path $osFile)) {
+    #     Write-Error "OS kernel not found: $osFile"
+    #     return $false
+    # }    
     
     # Create 100MB disk image filled with zeros
     Write-Host "Creating 100MB disk image..."

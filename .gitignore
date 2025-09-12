@@ -1,3 +1,8 @@
 .vscode/
+
+# reference docs
 inter61a
+
+# built images/binaries
 /build
+*.img
