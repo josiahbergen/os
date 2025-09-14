@@ -13,6 +13,8 @@ boot:
     mov bx, welcome
     call print
 
+    jmp $
+
 print:
     mov al, [bx]
 
@@ -28,12 +30,12 @@ print:
     inc bx
     jmp print
 
-done: 
+done:
     ; get cursor position
     mov ah, 03h
     mov bh, 0
-    int 10h 
-    
+    int 10h
+
     ; set cursor position
     mov ah, 02h
     inc dh ; cursor row is already in dh, so we need to add 1
@@ -42,7 +44,7 @@ done:
 
 ret
 
-clear: 
+clear:
     ; clear screen
     mov ah, 06h    ; scroll window up
     mov al, 00h    ; number of lines to scroll (00h = clear entire window)
@@ -62,7 +64,7 @@ clear:
 
 title: db "welcome to JBIOS v0.01", 0
 welcome: db "hi marko!", 0
-healthy: db "hard disk is healthy"
+healthy: db "hard disk is healthy", 0
 panic: db "everything has gone wrong", 0
 
 ; we have to be 512 bytes, so fill the rest of the bytes with 0s
