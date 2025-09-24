@@ -12,13 +12,13 @@ boot:
     call load_sectors
 
 dap: ; disk address packet
-	db 0x10
-	db 0
-	blkcount: dw 16 ; int 13 resets this to # of blocks actually read/written
-	dw 0x7e00 ; memory buffer destination address (0:7c00)
+	db 0x10 ; size of packet (16 bytes)
+	db 0 ; always 0
+	blkcount: dw 1 ; int 13 resets this to # of blocks actually read/written
+	dw 0x7e00 ; memory buffer destination address (0:7e00)
 	dw 0 ; in memory page zero
-    dd 1 ; put the lba to read in this spot
-	dd 0 ; more storage bytes only for big lba's ( > 4 bytes )
+    dd 2 ; low bits of lba
+	dd 0 ; high bits of lba
 
 load_sectors:
     mov bx, s_drive
@@ -29,15 +29,17 @@ load_sectors:
     int 13h
     jc panic
 
-    mov ah, 41h ; check if extensions are supported
-    mov bx, 0x55aa
-    mov dl, 0x80
-    int 13h
-    jc panic
+   	mov ah, 41h ; "check extensions present" service
+	mov bx, 0x55aa
+	int 13h
+	jc panic
+	cmp bx, 0xaa55 ; on success, bx is set to hex aa55
+	jne panic
+	test cx, 1 ; Check support for the "fixed disk access subset"
+	jz panic
 
     mov ah, 42h ; extended read sectors from drive
     mov si, dap
-    mov dl, 80h
     mov ax, ds  ; ds already points to current segment
     int 13h
     jc panic ; bad news
@@ -107,23 +109,21 @@ panic:
     jmp $
 
 chilling:
-    mov al, 0x0 ; letter A
-    mov ah, 0eh ; display character
-    int 10h 
+    mov bx, s_success ; letter A
+    call print
     ret
 
-s_title: db "welcome to JaideOS v0.01", 0
+s_title: db "welcome to JaideOS v0.01 ", 0
 s_welcome: db "hi marko!", 10, 0
-s_drive: db "reading init sectors...", 0
-s_success: db "success", 0
+s_drive: db "loading init sectors...", 0
+s_success: db "done", 0
 s_panic: db "everything has gone wrong", 0
-s_post_load: db "hello from address 0x7e00!", 0
 
 ; we have to be 512 bytes, so fill the rest of the bytes with 0s
 times 510 - ($-$$) db 0
 dw 0xAA55 ; magic number
 
 ; this code is now in the new sectors that are loaded in (should be at 0x7e00)
-mov al, 0x29 ; letter A
+mov al, 0x03 ; heart
 mov ah, 0eh ; display character
-int 10h 
+int 10h
