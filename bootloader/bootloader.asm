@@ -8,17 +8,18 @@ boot:
     call print
     mov bx, s_title
     call print
-
     call load_sectors
 
 dap: ; disk address packet
 	db 0x10 ; size of packet (16 bytes)
 	db 0 ; always 0
-	blkcount: dw 1 ; int 13 resets this to # of blocks actually read/written
+	; number of segments to load
+	; int 13 resets this to # of blocks actually read/written
+	blkcount: dw 1 ; read one sector (1x512 bytes)
 	dw 0x7e00 ; memory buffer destination address (0:7e00)
-	dw 0 ; in memory page zero
-    dd 2 ; low bits of lba
-	dd 0 ; high bits of lba
+	dw 0 ; the 0 in 0:7e00
+    dd 2 ; low 4 bytes of lba
+	dd 0 ; high 4 bytes bits of lba
 
 load_sectors:
     mov bx, s_drive
@@ -39,13 +40,12 @@ load_sectors:
 	jz panic
 
     mov ah, 42h ; extended read sectors from drive
-    mov si, dap
-    mov ax, ds  ; ds already points to current segment
+    mov dl, 80h ; drive 1
+    mov si, dap ; disk address packet
     int 13h
-    jc panic ; bad news
+    jc panic
 
-    call chilling
-    jmp 0x7e00 ; jump to the next sector, here we go!
+    jmp 0x7e00 ; jump to the loaded sector, here we go!
 
 print:
     mov al, [bx]
