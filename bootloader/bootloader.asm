@@ -12,25 +12,38 @@ boot:
     call load_sectors
 
 dap: ; disk address packet
-    db 10h ; size of DAP
-    db 00h ; reserved
-    dw 20h ; read 20 sectors (10,240 bytes)
-    dw 0000h ; offset of buffer
-    dw 9000h ; segment of buffer
-    dq 0002h ; starting LBA (2 b/c 1 is the boot sector)
+	db 0x10
+	db 0
+	blkcount: dw 16 ; int 13 resets this to # of blocks actually read/written
+	dw 0x7e00 ; memory buffer destination address (0:7c00)
+	dw 0 ; in memory page zero
+    dd 1 ; put the lba to read in this spot
+	dd 0 ; more storage bytes only for big lba's ( > 4 bytes )
 
 load_sectors:
     mov bx, s_drive
     call print
 
-    mov ah, 42h ; extended read sectors from drive
+    mov ah, 00h ; reset disk
     mov dl, 80h ; first hard disk
-    mov si, dap
-    mov ax, ds  ; ds already points to current segment
-    mov ds, ax
     int 13h
-    jc panic ; cf = 1, bad news
-    jmp 7e00h ; jump to the next sector, here we go!
+    jc panic
+
+    mov ah, 41h ; check if extensions are supported
+    mov bx, 0x55aa
+    mov dl, 0x80
+    int 13h
+    jc panic
+
+    mov ah, 42h ; extended read sectors from drive
+    mov si, dap
+    mov dl, 80h
+    mov ax, ds  ; ds already points to current segment
+    int 13h
+    jc panic ; bad news
+
+    call chilling
+    jmp 0x7e00 ; jump to the next sector, here we go!
 
 print:
     mov al, [bx]
@@ -93,18 +106,24 @@ panic:
     call print
     jmp $
 
-s_title: db "welcome to BERGOS v0.01", 0
+chilling:
+    mov al, 0x0 ; letter A
+    mov ah, 0eh ; display character
+    int 10h 
+    ret
+
+s_title: db "welcome to JaideOS v0.01", 0
 s_welcome: db "hi marko!", 10, 0
 s_drive: db "reading init sectors...", 0
+s_success: db "success", 0
 s_panic: db "everything has gone wrong", 0
+s_post_load: db "hello from address 0x7e00!", 0
 
 ; we have to be 512 bytes, so fill the rest of the bytes with 0s
 times 510 - ($-$$) db 0
 dw 0xAA55 ; magic number
 
-; this code is now in the new sectors that are loaded in
-
-s_test: db "hello from address 0x7e00!", 0
-mov bx, s_test
-call print
-jmp $
+; this code is now in the new sectors that are loaded in (should be at 0x7e00)
+mov al, 0x29 ; letter A
+mov ah, 0eh ; display character
+int 10h 

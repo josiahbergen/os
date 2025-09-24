@@ -70,7 +70,7 @@ function New-Disk {
     $diskData = [System.IO.File]::ReadAllBytes($DISK_IMG)
     
     # Copy bootloader to first 512 bytes
-    for ($i = 0; $i -lt [Math]::Min($bootloaderData.Length, 512); $i++) {
+    for ($i = 0; $i -lt [Math]::Min($bootloaderData.Length, 10024); $i++) {
         $diskData[$i] = $bootloaderData[$i]
     }
     
