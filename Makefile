@@ -14,7 +14,6 @@ os:
 	@make -C os
 
 disk: bootloader os
-	@clear
 	@dd if=/dev/zero of=$(DISK_IMG) bs=1M count=100
 	@dd conv=notrunc if=$(BOOTLOADER) of=$(DISK_IMG) bs=512 count=1 seek=0
 

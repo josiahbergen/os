@@ -9,28 +9,27 @@ boot:
     mov bx, s_title
     call print
 
-    call loader
+    call load_sectors
 
-    jmp $
-
-; disk address packet
-dap:
+dap: ; disk address packet
     db 10h ; size of DAP
     db 00h ; reserved
     dw 20h ; read 20 sectors (10,240 bytes)
     dw 0000h ; offset of buffer
     dw 9000h ; segment of buffer
-    dq 1234h ; starting LBA
+    dq 0002h ; starting LBA (2 b/c 1 is the boot sector)
 
-loader:
+load_sectors:
     mov bx, s_drive
     call print
 
     mov ah, 42h ; extended read sectors from drive
-    mov dl, 80h ; drive 0
+    mov dl, 80h ; first hard disk
+    mov si, dap
+    mov ax, ds  ; ds already points to current segment
+    mov ds, ax
     int 13h
-
-    cmp cf, 0
+    jc panic ; cf = 1, bad news
     jmp 7e00h ; jump to the next sector, here we go!
 
 print:
@@ -94,8 +93,7 @@ panic:
     call print
     jmp $
 
-
-s_title: db "welcome to JAYOS v0.01", 0
+s_title: db "welcome to BERGOS v0.01", 0
 s_welcome: db "hi marko!", 10, 0
 s_drive: db "reading init sectors...", 0
 s_panic: db "everything has gone wrong", 0
@@ -104,6 +102,9 @@ s_panic: db "everything has gone wrong", 0
 times 510 - ($-$$) db 0
 dw 0xAA55 ; magic number
 
+; this code is now in the new sectors that are loaded in
+
 s_test: db "hello from address 0x7e00!", 0
 mov bx, s_test
 call print
+jmp $
