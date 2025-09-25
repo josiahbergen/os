@@ -130,7 +130,7 @@ panic:
 s_title: db "welcome to JaideOS v0.01", 0
 s_welcome: db "hi marko!", 0
 s_empty: db "", 0
-s_drive: db "loading boot1 sectors...", 0
+s_drive: db "loading boot1 sectors from disk...", 0
 s_panic: db "everything has gone terribly wrong", 0
 
 
