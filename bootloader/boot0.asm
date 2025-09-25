@@ -1,6 +1,19 @@
 org 0x7c00 ; origin of the bootloader
 bits 16 ; we're in 16-bit real mode
 
+; first stage loader
+;
+; the first 512 bytes of this code is loaded into 0x0000:0x7c00 by the bios,
+; and is executed once the bios POST is done.
+;
+; goals:
+; - canonicalize the code segment and instruction pointer registers (cs:ip)
+; - set up the real mode stack pointer and associated registers
+; - print out a nice welcome message
+; - load more sectors from the disk into memory (specifically 0x0000:0x1000)
+; - transfer execution to the second stage loader
+; - notify and halt if any errors are encountered along the way
+
 start:
     cli ; disable interrupts
 
@@ -20,26 +33,21 @@ boot:
     mov ds, ax ; data segment
     mov es, ax ; extra segment
 
-    ; save our drive id for later
-    mov ah, 0 ; clear high byte
-    mov al, dl ; copy DL into AL
-    push ax ; now push 16-bit AX
-
     sti ; re-enable interrupts
 
     ; welcome message
+    mov bx, s_title
+    call print
     mov bx, s_welcome
     call print
     mov bx, s_empty ; hack to print a newline
-    call print 
-    mov bx, s_title
     call print
 
     ; waiter! more sectors please!
     call load_sectors
 
-    ; far jump to the loaded sector, here we go!
-    jmp 0x0000:0x1000 
+    ; far jump to the loaded sectors, here we go!
+    jmp 0x0000:0x1000
 
 dap: ; disk address packet
 	db 0x10 ; size of packet (16 bytes)
@@ -116,43 +124,16 @@ done:
 panic:
     mov bx, s_panic
     call print
-    jmp $
-
+    cli
+    hlt
 
 s_title: db "welcome to JaideOS v0.01", 0
 s_welcome: db "hi marko!", 0
 s_empty: db "", 0
-s_drive: db "loading init sectors...", 0
-s_panic: db "everything has gone wrong", 0
-s_success: db "hello from address 0x0000:0x1000!", 0
+s_drive: db "loading boot1 sectors...", 0
+s_panic: db "everything has gone terribly wrong", 0
 
 
 ; we have to be 512 bytes, so fill the rest of the bytes with 0s
 times 510 - ($-$$) db 0
 dw 0xAA55 ; magic number
-
-; this code is now in the new sectors that are loaded in
-; it should be in memory at 0x0000:0x1000)
-jmp loader
-
-loader: 
-    mov bx, s_success
-    call new_print
-    jmp $
-
-new_print:
-    mov al, [bx]
-
-    ; null check
-    cmp al, 0
-    je new_done
-
-    ; print the character
-    mov ah, 0eh ; display character
-    int 10h ; call bios video service
-
-    ; increment the pointer
-    inc bx
-    jmp new_print
-
-new_done: ret
