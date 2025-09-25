@@ -53,7 +53,7 @@ dap: ; disk address packet
     ; memory map reference: https://www.cs.cmu.edu/~410-s07/p4/p4-boot.pdf
 	dw 0x1000 ; offset
 	dw 0x0000 ; segment
-    dd 1 ; low 4 bytes of lba
+	dd 1 ; low 4 bytes of lba
 	dd 0 ; high 4 bytes bits of lba
 
 load_sectors:
