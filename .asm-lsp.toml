@@ -4,3 +4,8 @@ instruction_set = "x86"
 
 [default_config.opts]
 compiler = "nasm"
+compile_on_save = false
+compile_flags_txt = [
+  "-i/Users/josiah/Projects/os/bootloader",
+  "-o /dev/null"
+]
