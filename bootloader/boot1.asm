@@ -46,5 +46,5 @@ done:
     int 10h
     ret
 
-s_init: db "boot1 init: hello from 0x0000:0x1000!", 0
+s_init: db "hello from 0x0000:0x1000!", 0
 s_success: db "it works!!", 0

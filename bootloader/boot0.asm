@@ -36,8 +36,8 @@ boot:
     sti ; re-enable interrupts
 
     ; welcome message
-    mov bx, s_title
-    call print
+    ; mov bx, s_title
+    ; call print
     mov bx, s_welcome
     call print
     mov bx, s_empty ; hack to print a newline
