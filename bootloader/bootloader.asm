@@ -17,7 +17,8 @@ boot:
     xor ax, ax
     mov ss, ax ; set the segment to 0
     mov sp, 0x7c00 ; and the offset to 0x7c00
-
+    mov ds, ax ; data segment
+    mov es, ax ; extra segment
     sti ; enable interrupts
 
     ; welcome message
@@ -114,12 +115,24 @@ panic:
     call print
     jmp $
 
+chilling:
+    mov bx, s_success
+    call print
+    ret
 
 s_title: db "welcome to JaideOS v0.01 ", 0
 s_welcome: db "hi marko!", 10, 0
 s_drive: db "loading init sectors...", 0
+s_success: db "done", 0
 s_panic: db "everything has gone wrong", 0
 
 ; we have to be 512 bytes, so fill the rest of the bytes with 0s
 times 510 - ($-$$) db 0
 dw 0xAA55 ; magic number
+
+; this code is now in the new sectors that are loaded in
+; it should be in memory at 0x0000:0x1000)
+mov al, 0x03 ; heart
+mov ah, 0eh ; display character
+int 10h
+jmp $
