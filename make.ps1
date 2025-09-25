@@ -49,7 +49,6 @@ function New-Disk {
     Write-Host "Creating disk image..."
     
     $bootloaderFile = "$BOOTLOADER_DIR\bootloader.o"
-    # $osFile = "$OS_DIR\sample.o"
     
     # Check if bootloader exists
     if (-not (Test-Path $bootloaderFile)) {

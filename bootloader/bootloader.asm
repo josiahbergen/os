@@ -114,10 +114,6 @@ panic:
     call print
     jmp $
 
-chilling:
-    mov bx, s_success
-    call print
-    ret
 
 s_title: db "welcome to JaideOS v0.01 ", 0
 s_welcome: db "hi marko!", 10, 0
