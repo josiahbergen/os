@@ -14,13 +14,17 @@ start:
     mov bx, s_init
     call print
 
-    mov bx, s_wait
-    call print
-
-    xor ah, ah
-    int 16h
-
     call get_sectors
+
+    ; TODO:
+    ; get available memory
+    ; enable a20
+    ; load the global description table
+    ; switch to protected mode
+    ; get a cross-compiler and linker working
+    ; load and move the kernel into high memory
+    ; far jump to kernel
+
     cli
     hlt
 
@@ -41,8 +45,7 @@ get_sectors:
     ret
 
 s_init: db "hello from 0x0000:0x1000!", 10, 10, 0
-s_wait: db "press any key to boot... ", 0
-s_sector_info: db 10, 10, "ss      sp      ds      es", 10, 0
+s_sector_info: db "segment info:", 10, "ss      sp      ds      es", 10, 0
 
 
 %include "util.asm"
