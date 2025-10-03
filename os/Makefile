@@ -10,4 +10,4 @@ $(BUILD_DIR)/%.o: %.asm
 	@nasm -f bin $< -o $@
 
 clean:
-	@rm $(BUILD_DIR)/*
+	@rm -f $(BUILD_DIR)/*

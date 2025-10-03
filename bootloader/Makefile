@@ -7,7 +7,7 @@ all: $(BOOTLOADER_OBJS)
 
 $(BUILD_DIR)/%.o: %.asm
 	mkdir -p $(BUILD_DIR)
-	nasm -i/Users/josiah/Projects/os/bootloader -f bin $< -o $@
+	nasm -i/mnt/c/Github/os/build/bootloader -f bin $< -o $@
 
 clean:
-	@rm $(BUILD_DIR)/*
+	@rm -f $(BUILD_DIR)/*

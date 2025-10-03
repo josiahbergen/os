@@ -18,10 +18,10 @@ start:
     cli ; disable interrupts
 
     ; canonicalize cs:ip and jump to main boot code
-    jmp 0:boot ; set code segment to 0x0000, and instruction pointer to boot's offset
+    jmp 0x0000:b0_boot ; set code segment to 0x0000, and instruction pointer to boot's offset
     ; cs = 0x0000 is useful for when we eventually jump to a high-level kernel
 
-boot:
+b0_boot:
     ; set up real mode stack
     ; the stack pointer is a segment:offset pair (ss:sp),
     ; and will grow downwards from 0x0000:0x7c00.
@@ -36,20 +36,18 @@ boot:
     sti ; re-enable interrupts
 
     ; welcome message
-    ; mov bx, s_title
-    ; call print
-    mov bx, s_welcome
-    call print
-    mov bx, s_empty ; hack to print a newline
-    call print
+    ; mov bx, b0_s_title
+    ; call b0_print
+    mov bx, b0_s_welcome
+    call b0_print
 
     ; waiter! more sectors please!
-    call load_sectors
+    call b0_load_sectors
 
     ; far jump to the loaded sectors, here we go!
     jmp 0x0000:0x1000
 
-dap: ; disk address packet
+b0_dap: ; disk address packet
 	db 0x10 ; size of packet (16 bytes)
 	db 0 ; reserved, always 0
 	; number of segments to load
@@ -61,77 +59,84 @@ dap: ; disk address packet
     ; memory map reference: https://www.cs.cmu.edu/~410-s07/p4/p4-boot.pdf
 	dw 0x1000 ; offset
 	dw 0x0000 ; segment
-	dd 1 ; low 4 bytes of lba
+	dd 1 ; low 4 bytes of logical block address (lba)
 	dd 0 ; high 4 bytes bits of lba
 
-load_sectors:
-    mov bx, s_drive
-    call print
+b0_load_sectors:
+    mov bx, b0_s_drive
+    call b0_print
 
-    mov ah, 00h ; reset disk
+    mov ah, 0x00 ; reset disk
     mov dl, 0x80 ; first hard disk
     int 13h
-    jc panic
+    jc b0_panic
 
-   	mov ah, 41h ; "check extensions present" service
+   	mov ah, 0x41 ; "check extensions present" service
 	mov bx, 0x55aa
-	int 13h
+	int 0x13
 	cmp bx, 0xaa55 ; on success, bx is set to hex aa55
-	jne panic
+	jne b0_panic
 	test cx, 1 ; Check support for the "fixed disk access subset"
-	jz panic
+	jz b0_panic
 
-    mov si, dap ; disk address packet
+    mov si, b0_dap ; disk address packet
     mov ah, 42h ; extended read sectors from drive
     mov dl, 0x80
-    int 13h
-    jc panic
+    int 0x13
+    jc b0_panic
 
     ; maybe set data segments here for something that boot1 will like
     ; but for now, return
     ret
 
-print:
+b0_print:
+    ; new print function
+    ; requires a newline byte (10) to print a newline
     mov al, [bx]
 
     ; null check
     cmp al, 0
-    je done
+    je b0_done
+
+    cmp al, 10
+    je b0_newline
 
     ; print the character
-    mov ah, 0eh ; display character
-    int 10h ; call bios video service
+    mov ah, 0x0e ; display character
+    int 0x10 ; bios video service
 
     ; increment the pointer
     inc bx
-    jmp print
+    jmp b0_print
 
-done:
-    ; put a newline at the end of each string we print
-    ; so hacky but whatever works works
+b0_newline:
 
-    mov ah, 03h ; get cursor position
-    xor bh, bh ; page 0
-    int 10h
+    mov ah, 0x0e ; print character
 
-    ; set cursor position
-    mov ah, 02h
-    inc dh ; cursor row is already in dh, so we need to add 1
-    xor dl, dl ; col 0
-    int 10h
+    ; carriage return
+    mov al, 0x0d
+    int 0x10
+
+    ; line feed
+    mov al, 0x0a
+    int 0x10
+
+    inc bx ; so we don't infinitely print newlines
+    jmp b0_print
+
+b0_done:
     ret
 
-panic:
-    mov bx, s_panic
-    call print
+b0_panic:
+    mov bx, b0_s_panic
+    call b0_print
     cli
     hlt
 
-s_title: db "welcome to JaideOS v0.01", 0
-s_welcome: db "hi marko!", 0
-s_empty: db "", 0
-s_drive: db "loading boot1 sectors from disk...", 0
-s_panic: db "everything has gone terribly wrong", 0
+b0_s_title: db "welcome to JaideOS v0.01", 10, 0
+b0_s_welcome: db "hi marko!", 10, 10, 0
+b0_s_drive: db "loading boot1...", 10, 0
+b0_s_panic: db "everything has gone terribly wrong", 10, 0
 
 
 ; we have to be 512 bytes, so fill the rest of the bytes with 0s
