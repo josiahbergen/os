@@ -14,7 +14,7 @@ start:
     mov bx, b1_s_init
     call b1_print
 
-    ; call get_sectors
+    call get_sectors
 
     ; TODO:
     ; get available memory
