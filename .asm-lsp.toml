@@ -6,6 +6,6 @@ instruction_set = "x86"
 compiler = "nasm"
 compile_on_save = false
 compile_flags_txt = [
-  "-i/Users/josiah/Projects/os/bootloader",
+  "-i/Users/josiah/Projects/os/boot",
   "-o /dev/null"
 ]
