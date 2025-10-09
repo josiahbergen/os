@@ -76,4 +76,4 @@ b1_done:
     ret
 
 ; padding spaces at the end (so terrible)
-b1_s_hex_out: db "0x0000  ", 0
+b1_s_hex_out: db "0x0000", 0
