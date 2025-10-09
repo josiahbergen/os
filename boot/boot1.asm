@@ -24,19 +24,19 @@ start:
     mov bx, b1_s_success
     call b1_print
 
+    mov bx, b1_s_protected
+    call b1_print
+
+    cli ; disable interrupts
+
     ; set constants for the addresses of the code and data segments
     CODE_SEG equ b1_gdt_kernel_code_segment - b1_gdt_start
     DATA_SEG equ b1_gdt_kernel_data_segment - b1_gdt_start
-    call b1_print_gdt_status
-
-    cli ; disable interrupts
 
     ; enter protected mode:
     ; to enter protected mode, we need to set the last bit
     ; of a special register (cr0) to 1. to do this, we need to
     ; set eax (a 32-bit register) and copy its value into cr0
-    mov bx, b1_s_protected
-    call b1_print
 
     mov eax, cr0
     or eax, 1
@@ -45,8 +45,7 @@ start:
     ; after this is done, the instruction pipeline needs to be cleared.
     ; to do this, we perform a far jump:
     jmp CODE_SEG:start_protected_mode
-
-    jmp $
+    hlt
 
 b1_print_gdt_status:
     mov bx, b1_s_code_segment
@@ -160,7 +159,7 @@ b1_gdt_start: ; must be at the end of the real mode code
         db 0x00 ; base 17-24
 
         ; see b1_gdt_kernel_code_segment for definitions
-        dw 0b10010010 ; access byte
+        db 0b10010010 ; access byte
         db 0b11001111 ; flags byte
 
         db 0x00 ; base 25-32
