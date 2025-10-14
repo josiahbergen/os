@@ -2,13 +2,13 @@
 #include <stddef.h>
 #include <stdint.h>
 
-// Check if the compiler thinks you are targeting the wrong operating system.
+// check if the compiler thinks you are targeting the wrong operating system
 #if defined(__linux__)
 #error                                                                         \
     "WARNING: You are not using a cross-compiler, you will most certainly run into trouble."
 #endif
 
-/* Hardware text mode color constants. */
+// hardware text mode color constants
 enum vga_color {
   VGA_COLOR_BLACK = 0,
   VGA_COLOR_BLUE = 1,
@@ -53,11 +53,12 @@ size_t terminal_column;
 uint8_t terminal_color;
 uint16_t *terminal_buffer = (uint16_t *)VGA_MEMORY;
 
-void terminal_initialize(void) {
+void terminal_init(void) {
   terminal_row = 0;
   terminal_column = 0;
   terminal_color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
 
+  // clear the screen
   for (size_t y = 0; y < VGA_HEIGHT; y++) {
     for (size_t x = 0; x < VGA_WIDTH; x++) {
       const size_t index = y * VGA_WIDTH + x;
@@ -82,19 +83,15 @@ void terminal_putchar(char c) {
   }
 }
 
-void terminal_write(const char *data, size_t size) {
+void terminal_write(const char *data) {
+  size_t size = strlen(data);
   for (size_t i = 0; i < size; i++)
     terminal_putchar(data[i]);
 }
 
-void terminal_writestring(const char *data) {
-  terminal_write(data, strlen(data));
-}
-
 void kernel_main(void) {
-  /* Initialize terminal interface */
-  terminal_initialize();
 
-  /* Newline support is left as an exercise. */
-  terminal_writestring("Hello, kernel World!\n");
+  // we are here!!! finally!!!
+  terminal_init();
+  terminal_write("Hi Marko! (one final time");
 }

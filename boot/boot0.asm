@@ -52,7 +52,7 @@ b0_dap: ; disk address packet
 	db 0 ; reserved, always 0
 	; number of segments to load
 	; int 13 resets this to # of blocks actually read/written
-	dw 2 ; read 2 sectors (2x512 bytes, 1kb)
+	dw 16 ; read 6 sectors (16x512 bytes, 8kb)
     ; 4 byte memory buffer destination address (segment:offset format)
     ; we want the final address to be 0x0000:0x1000
     ; however, x86 is little endian so we put offset first and then segment
@@ -135,7 +135,7 @@ b0_panic:
 
 b0_s_title: db "welcome to the JaideOS bootloader v0.01", 10, 0
 b0_s_welcome: db "hi marko!", 10, 10, 0
-b0_s_drive: db "loading sectors...", 10, 0
+b0_s_drive: db "loading boot1 and kernel sectors...", 10, 0
 b0_s_panic: db "everything has gone terribly wrong", 10, 0
 
 ; we have to be 512 bytes, so fill the rest of the bytes with 0s

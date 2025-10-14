@@ -46,9 +46,6 @@ start:
     jmp CODE_SEG:start_protected_mode
     hlt ; fallback
 
-b1_load_kernel:
-
-
 b1_panic:
     mov bx, b1_s_error
     call b1_print
@@ -58,7 +55,7 @@ b1_panic:
 
 b1_s_init: db "hello from 0x0000:0x1000!", 10, 0
 b1_s_load_gdt: db "loading global descriptor table... ", 0
-b1_s_protected: db "entering 32-bit protected mode... ", 0
+b1_s_protected: db "entering 32-bit protected mode...   ", 0
 b1_s_success: db "OK", 10, 0
 b1_s_error: db "everything has gone terribly wrong.", 10, 0
 
@@ -156,39 +153,29 @@ b1_gdt_descriptor:
     dw b1_gdt_end - b1_gdt_start - 1 ; table size - 1
     dd b1_gdt_start ; start offset
 
-[BITS 32]
+[bits 32]
 start_protected_mode:
 
     ; video memory is at 0xb8000
     ; set the low byte of ax to the character
     ; and the high byte of ax to the color
-    ; this should put the character J in the top left
-    ;
-    jmp pm_print_welcome
-    jmp $
+    ; this should put OK in the proper position
+    call pm_print_welcome
+
+    ; clear registers and jump to kernel
+    mov ax, 10h
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+    ; jmp 8:10000h
 
 pm_print_welcome:
 
-    mov ah, 0x0f ; white on black
-
-    mov al, 'H'
-    mov [0xb87f0], ax
-    mov al, 'I'
-    mov [0xb87f2], ax
-
-    mov al, 'M'
-    mov [0xb8890], ax
-    mov al, 'A'
-    mov [0xb8892], ax
-    mov al, 'R'
-    mov [0xb8894], ax
-    mov al, 'K'
-    mov [0xb8896], ax
+    mov ah, 0x07 ; color: light gray on black
     mov al, 'O'
-    mov [0xb8898], ax
-    mov al, '!'
-    mov [0xb889a], ax
-
-    jmp $
-
-pm_s_welcome: db "WELCOME TO "
+    mov [0xb8904], ax
+    mov al, 'K'
+    mov [0xb8906], ax
+    ret
