@@ -46,6 +46,9 @@ start:
     jmp CODE_SEG:start_protected_mode
     hlt ; fallback
 
+b1_load_kernel:
+
+
 b1_panic:
     mov bx, b1_s_error
     call b1_print
