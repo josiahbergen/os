@@ -1,6 +1,14 @@
 org 0x1000
 bits 16
 
+%ifndef KERNEL_LBA
+%define KERNEL_LBA 17
+%endif
+
+%ifndef KERNEL_SECTORS
+%define KERNEL_SECTORS 128
+%endif
+
 %macro print_string 1
     mov bx, %1
     call b1_print
@@ -25,9 +33,10 @@ start:
     print_string b1_s_title
     print_string b1_s_welcome
 
-    ; TODO: get available memory and video modes
+    print_string b1_s_info
     call b1_get_memory
     call b1_set_video
+    call b1_newline
 
     ; load the global descriptor table:
     ; the descriptor lives at b1_gdt_descriptor, and
@@ -49,6 +58,9 @@ b1_enter_protected_mode:
 
     mov bx, b1_s_protected
     call b1_print
+
+    ; call b1_enable_a20 ; enable A20
+    call b1_load_kernel ; load kernel into 0x00010000
 
     cli ; disable interrupts
 
@@ -82,7 +94,7 @@ b1_draw_navbar:
     mov [b1_cursor_pos], dx
 
     mov ah, 0x02 ; set cursor position
-    mov dx, 0x01400 ; col:row
+    mov dx, 0x01500 ; col:row
     int 0x10
 
     mov ah, 0x09 ; write character and attribte at cursor position
@@ -109,7 +121,7 @@ b1_draw_navbar:
 
     ; draw a red pixel at the address we just decided
     mov ah, 0x02 ; set cursor position
-    mov dh, 0x14 ; to row 0x14 (the col is set by the logic above)
+    mov dh, 0x15 ; to row 0x14 (the col is set by the logic above)
     int 0x10
     mov ah, 0x09 ; write character and attribte at cursor position
     mov al, " " ; character
@@ -151,15 +163,24 @@ b1_draw_loop:
 
     _b1_draw_pressed_left:
     cmp [b1_navbar_selection], 0x00
-    je b1_draw_loop
+    je _b1_draw_loop_left
     dec [b1_navbar_selection]
     jmp b1_draw_loop
 
     _b1_draw_pressed_right:
     cmp [b1_navbar_selection], 0x03
-    je b1_draw_loop
+    je _b1_draw_loop_right
     inc [b1_navbar_selection]
     jmp b1_draw_loop
+
+    _b1_draw_loop_left:
+    mov [b1_navbar_selection], 0x03
+    jmp b1_draw_loop
+
+    _b1_draw_loop_right:
+    mov [b1_navbar_selection], 0x00
+    jmp b1_draw_loop
+
 
     _b1_draw_pressed_enter:
     cmp [b1_navbar_selection], 0x00
@@ -174,12 +195,32 @@ b1_draw_loop:
     jmp b1_draw_loop ; do nothing is selected
 
 b1_panic:
-    mov bx, b1_s_error
+    xor ah, ah ; set video mode
+    mov al, 0x03
+    int 0x10
+    xor al, al; scroll all rows
+    xor cx, cx ; top left corner (0, 0)
+    mov bh, 0x4f ; light gray on black
+    mov dx, 0x184F ; bottom right corner (24, 79)
+    mov ah, 0x06 ; scroll screen
+    int 0x10
+    mov bx, b1_s_panic
     call b1_print
-    jmp $
+
+    mov ah, 0x86
+    ; we want a delay of 0x004c4b40
+    ; the timer is in cx:dx, thus we need 004c:4b40
+    mov cx, 0x003d
+    mov dx, 0x0900
+    int 0x15
+    jmp b1_reboot
 
 b1_reboot:
+    xor ah, ah ; set video mode
+    mov al, 0x03
+    int 0x10
     int 0x19
+    jmp $
 
 b1_get_memory:
     ; get low memory
@@ -199,7 +240,6 @@ b1_get_memory:
     print_string b1_s_high_memory
     print_hex bx
     call b1_newline
-    call b1_newline
     ret
 
 b1_set_video:
@@ -213,23 +253,7 @@ b1_set_video:
     ret
 
 %include "util.asm"
-
-
-b1_s_title: db "welcome to josiah's bootloader (v0.01)", 10, 0
-b1_s_welcome: db "hi marko!", 10, 10, 0
-
-b1_s_memory: db "conventional memory (kb): ", 0
-b1_s_low_memory: db "extended memory between 1m and 16m (kb): ", 0
-b1_s_high_memory: db "64k blocks of extended memory above 16m: ", 0
-b1_s_set_video: db "setting video mode... ", 0
-b1_s_video_info: db "current video mode: 720x400px (80x25ch) 16 color VGA", 10, 0
-b1_s_load_gdt: db "loading global descriptor table... ", 0
-
-b1_s_navbar_text: db "options: [ LOAD KERNEL ]   [ RESTART ]   [ PANIC ]   [ DO NOTHING ]", 0
-b1_s_load_finished: db 10, "press SPACE to boot or use the arrow keys to select another action. ", 0
-b1_s_protected: db "entering 32-bit protected mode...", 0
-b1_s_success: db "OK", 10, 0
-b1_s_error: db 10, "everything has gone terribly wrong.", 10, 0
+%include "strings.asm"
 
 b1_navbar_selection: dw 0x00
 
@@ -327,22 +351,105 @@ b1_gdt_descriptor:
     dw b1_gdt_end - b1_gdt_start - 1 ; table size - 1
     dd b1_gdt_start ; start offset
 
+b1_kernel_dap:
+	db 0x10	; size of packet (16 bytes)
+	db 0x00	; reserved
+	dw KERNEL_SECTORS ; number of blocks to read
+	dw 0x0000 ; offset
+	dw 0x1000 ; segment (this gives us 0x00010000)
+	dd KERNEL_LBA ; LBA low dword
+	dd 0x00000000 ; LBA high dword
+
+b1_load_kernel:
+
+	push ax
+	push bx
+	push cx
+	push dx
+	push si
+
+	; check extensions
+	mov ah, 0x41
+	mov bx, 0x55aa
+	int 0x13
+	cmp bx, 0xaa55
+	jne b1_panic
+	test cx, 1
+	jz b1_panic
+
+	mov ah, 0x41 ; "check extensions present" service
+
+	mov si, b1_kernel_dap
+	mov ah, 0x42
+	mov dl, 0x80
+	int 0x13
+	jc b1_panic
+
+	pop si
+	pop dx
+	pop cx
+	pop bx
+	pop ax
+	ret
+
+b1_enable_a20:
+	; enable A20 via keyboard controller method
+	call .b1_wait_input
+	mov al, 0xAD ; disable keyboard
+	out 0x64, al
+
+	call .b1_wait_input
+	mov al, 0xD0 ; read output port command
+	out 0x64, al
+
+	call .b1_wait_output
+	in al, 0x60	; read current output port
+	or al, 0000_0010b ; set A20 (bit 1)
+
+	call .b1_wait_input
+	mov ah, al ; save value in ah
+	mov al, 0xD1 ; write output port command
+	out 0x64, al
+	call .b1_wait_input
+	mov al, ah
+	out 0x60, al
+
+	call .b1_wait_input
+	mov al, 0xAE ; re-enable keyboard
+	out 0x64, al
+	ret
+
+.b1_wait_input:
+	in al, 0x64
+	test al, 0000_0010b	; input buffer full?
+	jnz .b1_wait_input
+	ret
+
+.b1_wait_output:
+	in al, 0x64
+	test al, 0000_0001b	; output buffer full?
+	jz .b1_wait_output
+	ret
+
 [bits 32]
 start_protected_mode:
 
-    call pm_print_welcome
-
-    ; clear registers and jump to kernel
+    ; set up flat data segments and a 32-bit stack
     mov ax, 10h
     mov ds, ax
     mov es, ax
     mov fs, ax
     mov gs, ax
     mov ss, ax
-    ; jmp 8:10000h
+    mov esp, 0x20000
 
-    kernel_run_loop: hlt
-    jmp kernel_run_loop ; juuust in case
+    call pm_print_welcome
+
+    ; jump to kernel entry linked at 0x00010000
+    jmp 8:10000h
+
+    pm_kernel_run_loop: hlt
+    jmp pm_kernel_run_loop ; juuust in case
 
 pm_print_welcome:
 

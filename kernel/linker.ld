@@ -1,10 +1,10 @@
 OUTPUT_FORMAT(elf32-i386)
-ENTRY(_start)
+ENTRY(kernel_main)
 
 SECTIONS
 {
     /* where the kernel will be loaded */
-	. = 2M;
+	. = 0x10000;
 
     /* multiboot header */
 	.text BLOCK(4K) : ALIGN(4K)

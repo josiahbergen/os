@@ -45,12 +45,16 @@ b0_boot:
     ; far jump to the loaded sectors, here we go!
     jmp 0x0000:0x1000
 
+%ifndef B1_SECTORS
+%define B1_SECTORS 16
+%endif
+
 b0_dap: ; disk address packet
-	db 0x10 ; size of packet (16 bytes)
-	db 0 ; reserved, always 0
-	; number of segments to load
-	; int 13 resets this to # of blocks actually read/written
-	dw 16 ; read 6 sectors (16x512 bytes, 8kb)
+    db 0x10 ; size of packet (16 bytes)
+    db 0 ; reserved, always 0
+    ; number of segments to load
+    ; int 13 resets this to # of blocks actually read/written
+    dw B1_SECTORS ; number of 512-byte sectors to read for boot1
     ; 4 byte memory buffer destination address (segment:offset format)
     ; we want the final address to be 0x0000:0x1000
     ; however, x86 is little endian so we put offset first and then segment

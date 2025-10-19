@@ -93,5 +93,5 @@ void kernel_main(void) {
 
   // we are here!!! finally!!!
   terminal_init();
-  terminal_write("Hi Marko! (one final time");
+  terminal_write("Hi Marko!!! (from the kernel!!!!)");
 }

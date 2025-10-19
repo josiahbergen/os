@@ -1,8 +1,8 @@
 CC = i686-elf-gcc
 LD = i686-elf-ld
 OBJCOPY = i686-elf-objcopy
-SRC_DIR = kernel
-BUILD_DIR = build
+SRC_DIR = src
+BUILD_DIR = ../build/kernel
 
 # Collect all C source files in kernel directory
 SRC = $(wildcard $(SRC_DIR)/*.c)
@@ -34,16 +34,6 @@ $(KERNEL_ELF): $(OBJ)
 # Convert ELF to raw binary
 $(KERNEL_BIN): $(KERNEL_ELF)
 	$(OBJCOPY) -O binary $< $@
-
-# Run with QEMU
-run: $(KERNEL_BIN)
-	qemu-system-i386 -kernel $(KERNEL_BIN)
-
-# Debug with GDB stub
-debug: $(KERNEL_ELF)
-	qemu-system-i386 -kernel $(KERNEL_ELF) -S -s
-	# Then in another terminal:
-	# i386-elf-gdb -ex "target remote localhost:1234" -ex "symbol-file $(KERNEL_ELF)"
 
 # Clean build files
 clean:
