@@ -4,9 +4,12 @@ BOOT1=$(BUILD_DIR)/boot/boot1.o
 OS=$(BUILD_DIR)/os/kernel.c
 DISK_IMG=$(BUILD_DIR)/disk/disk.img
 
-all: disk qemu
+all: clear disk qemu
 
 .PHONY: disk bootloader os
+
+clear:
+	@clear
 
 bootloader:
 	@echo "all: building bootloader"
@@ -14,7 +17,7 @@ bootloader:
 
 os:
 	@echo "all: building kernel"
-	@make -s -C kernel
+	@# make -s -C kernel
 
 disk: bootloader os
 	@mkdir -p $(BUILD_DIR)/disk

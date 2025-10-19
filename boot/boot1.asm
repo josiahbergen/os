@@ -1,6 +1,16 @@
 org 0x1000
 bits 16
 
+%macro print_string 1
+    mov bx, %1
+    call b1_print
+%endmacro
+
+%macro print_hex 1
+    mov dx, %1
+    call b1_print_hex
+%endmacro
+
 ; second stage loader
 ;
 ; this code is now in the new sectors that are loaded in
@@ -9,10 +19,15 @@ bits 16
 start:
     ; we made it to 0x0000:0x1000. what next?
     ; top of the stack is 0x0000:0x7c00
-    mov bx, b1_s_init
-    call b1_print
+
+    call b1_background_init
+
+    print_string b1_s_title
+    print_string b1_s_welcome
 
     ; TODO: get available memory and video modes
+    call b1_get_memory
+    call b1_set_video
 
     ; load the global descriptor table:
     ; the descriptor lives at b1_gdt_descriptor, and
@@ -23,6 +38,14 @@ start:
     lgdt [b1_gdt_descriptor] ; the magic!
     mov bx, b1_s_success
     call b1_print
+
+    print_string b1_s_load_finished
+
+    jmp b1_draw_loop
+
+b1_enter_protected_mode:
+
+    call b1_newline
 
     mov bx, b1_s_protected
     call b1_print
@@ -44,20 +67,171 @@ start:
     ; after this is done, the instruction pipeline needs to be cleared.
     ; to do this, we perform a far jump:
     jmp CODE_SEG:start_protected_mode
+
     hlt ; fallback
+
+b1_cursor_pos: dd 0x0000
+
+b1_draw_navbar:
+    ; draw a line across the screen
+
+    ; save the previous cursor position
+    mov ah, 0x03
+    xor bh, bh ; we zero the page number here, we dont have to do it later
+    int 0x10
+    mov [b1_cursor_pos], dx
+
+    mov ah, 0x02 ; set cursor position
+    mov dx, 0x01400 ; col:row
+    int 0x10
+
+    mov ah, 0x09 ; write character and attribte at cursor position
+    mov al, " " ; character
+    mov bl, 0xf0 ; color: black on white
+    mov cx, 0x50 ; number of times to print (85)
+    int 0x10
+
+    mov dl, 0x09
+    cmp [b1_navbar_selection], 0x01
+    jne _reboot_not_selected
+    mov dl, 0x1b
+    _reboot_not_selected:
+
+    cmp [b1_navbar_selection], 0x02
+    jne _panic_not_selected
+    mov dl, 0x29
+    _panic_not_selected:
+
+    cmp [b1_navbar_selection], 0x03
+    jne _nothing_not_selected
+    mov dl, 0x35
+    _nothing_not_selected:
+
+    ; draw a red pixel at the address we just decided
+    mov ah, 0x02 ; set cursor position
+    mov dh, 0x14 ; to row 0x14 (the col is set by the logic above)
+    int 0x10
+    mov ah, 0x09 ; write character and attribte at cursor position
+    mov al, " " ; character
+    mov bl, 0xcf ; color: black on white
+    mov cx, 0x01 ; number of chars to print
+    int 0x10
+    mov ah, 0x02 ; reset cursor position
+    xor dl, dl ; to col 0
+    int 0x10
+
+    print_string b1_s_navbar_text
+
+    mov ah, 0x02 ; reset cursor position
+    xor bh, bh ; page 0
+    mov dx, [b1_cursor_pos]
+    int 0x10
+    ret
+
+b1_draw_loop:
+    call b1_draw_navbar
+
+    _b1_draw_input_loop:
+    xor ah, ah
+    int 0x16
+
+    cmp ax, 0x3920 ; space
+    je b1_enter_protected_mode
+
+    cmp ax, 0x1c0d ; enter
+    je _b1_draw_pressed_enter
+
+    cmp ax, 0x4b00 ; left arrow
+    je _b1_draw_pressed_left
+
+    cmp ax, 0x4d00 ; right arrow
+    je _b1_draw_pressed_right
+
+    jmp _b1_draw_input_loop ; restart the loop if any other key
+
+    _b1_draw_pressed_left:
+    cmp [b1_navbar_selection], 0x00
+    je b1_draw_loop
+    dec [b1_navbar_selection]
+    jmp b1_draw_loop
+
+    _b1_draw_pressed_right:
+    cmp [b1_navbar_selection], 0x03
+    je b1_draw_loop
+    inc [b1_navbar_selection]
+    jmp b1_draw_loop
+
+    _b1_draw_pressed_enter:
+    cmp [b1_navbar_selection], 0x00
+    je b1_enter_protected_mode
+
+    cmp [b1_navbar_selection], 0x01
+    je b1_reboot
+
+    cmp [b1_navbar_selection], 0x02
+    je b1_panic
+
+    jmp b1_draw_loop ; do nothing is selected
 
 b1_panic:
     mov bx, b1_s_error
     call b1_print
     jmp $
 
+b1_reboot:
+    int 0x19
+
+b1_get_memory:
+    ; get low memory
+    print_string b1_s_memory
+    int 0x12 ; conventional memory is now in ax
+    print_hex ax
+    call b1_newline
+
+    ; get upper memory
+    ; ax = cx = extended memory between 1M and 16M, in K (max 3C00h = 15MB)
+    ; bx = dx = extended memory above 16M, in 64K blocks
+    mov ax, 0xe801
+    int 0x15
+    print_string b1_s_low_memory
+    print_hex ax
+    call b1_newline
+    print_string b1_s_high_memory
+    print_hex bx
+    call b1_newline
+    call b1_newline
+    ret
+
+b1_set_video:
+    xor ax, ax ; so we can check their result after
+    mov ah, 0x0f ; get current video mode
+    int 0x10
+    cmp al, 0x03 ; check if video is as expected
+    jne b1_panic
+    print_string b1_s_video_info
+    call b1_newline
+    ret
+
 %include "util.asm"
 
-b1_s_init: db "hello from 0x0000:0x1000!", 10, 0
+
+b1_s_title: db "welcome to josiah's bootloader (v0.01)", 10, 0
+b1_s_welcome: db "hi marko!", 10, 10, 0
+
+b1_s_memory: db "conventional memory (kb): ", 0
+b1_s_low_memory: db "extended memory between 1m and 16m (kb): ", 0
+b1_s_high_memory: db "64k blocks of extended memory above 16m: ", 0
+b1_s_set_video: db "setting video mode... ", 0
+b1_s_video_info: db "current video mode: 720x400px (80x25ch) 16 color VGA", 10, 0
 b1_s_load_gdt: db "loading global descriptor table... ", 0
-b1_s_protected: db "entering 32-bit protected mode...   ", 0
+
+b1_s_navbar_text: db "options: [ LOAD KERNEL ]   [ RESTART ]   [ PANIC ]   [ DO NOTHING ]", 0
+b1_s_load_finished: db 10, "press SPACE to boot or use the arrow keys to select another action. ", 0
+b1_s_protected: db "entering 32-bit protected mode...", 0
 b1_s_success: db "OK", 10, 0
-b1_s_error: db "everything has gone terribly wrong.", 10, 0
+b1_s_error: db 10, "everything has gone terribly wrong.", 10, 0
+
+b1_navbar_selection: dw 0x00
 
 b1_gdt_start: ; must be at the end of the real mode code
 
@@ -156,10 +330,6 @@ b1_gdt_descriptor:
 [bits 32]
 start_protected_mode:
 
-    ; video memory is at 0xb8000
-    ; set the low byte of ax to the character
-    ; and the high byte of ax to the color
-    ; this should put OK in the proper position
     call pm_print_welcome
 
     ; clear registers and jump to kernel
@@ -171,11 +341,15 @@ start_protected_mode:
     mov ss, ax
     ; jmp 8:10000h
 
+    kernel_run_loop: hlt
+    jmp kernel_run_loop ; juuust in case
+
 pm_print_welcome:
 
-    mov ah, 0x07 ; color: light gray on black
+    ; video memory is at 0xb8000
+    mov ah, 0xF2 ;  light gray on black
     mov al, 'O'
-    mov [0xb8904], ax
+    mov [0xb809c], ax
     mov al, 'K'
-    mov [0xb8906], ax
+    mov [0xb809e], ax
     ret

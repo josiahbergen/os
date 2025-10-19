@@ -36,9 +36,7 @@ b0_boot:
     sti ; re-enable interrupts
 
     ; welcome message
-    mov bx, b0_s_title
-    call b0_print
-    mov bx, b0_s_welcome
+    mov bx, b0_s_init
     call b0_print
 
     ; waiter! more sectors please!
@@ -133,8 +131,7 @@ b0_panic:
     cli
     hlt
 
-b0_s_title: db "welcome to the JaideOS bootloader v0.01", 10, 0
-b0_s_welcome: db "hi marko!", 10, 10, 0
+b0_s_init: db 10, "boot init", 10, 0
 b0_s_drive: db "loading boot1 and kernel sectors...", 10, 0
 b0_s_panic: db "everything has gone terribly wrong", 10, 0
 
