@@ -90,8 +90,16 @@ void terminal_write(const char *data) {
 }
 
 void kernel_main(void) {
-
+  // Set up stack for C function calls
+  asm volatile("mov $0x20000, %esp");
+  
   // we are here!!! finally!!!
   terminal_init();
   terminal_write("Hi Marko!!! (from the kernel!!!!)");
+  
+  // Infinite loop to prevent return
+  while(1) {
+    asm volatile("hlt");
+  }
 }
+

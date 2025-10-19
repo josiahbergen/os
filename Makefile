@@ -28,6 +28,7 @@ disk: bootloader os
 	KERNEL_SECTORS=$$(expr \( $$(stat -f%z $(KERNEL_BIN)) + 511 \) / 512); \
 	KERNEL_LBA=$$((1 + $$BOOT1_SECTORS)); \
 	echo "boot1 sectors=$$BOOT1_SECTORS kernel sectors=$$KERNEL_SECTORS lba=$$KERNEL_LBA"; \
+	$(MAKE) -s -C boot clean; \
 	$(MAKE) -s -C boot EXTRA_NASM_FLAGS="-D B1_SECTORS=$$BOOT1_SECTORS -D KERNEL_LBA=$$KERNEL_LBA -D KERNEL_SECTORS=$$KERNEL_SECTORS"; \
 	dd conv=notrunc if=$(BOOT0) of=$(DISK_IMG) bs=512 count=1 seek=0; \
 	dd conv=notrunc if=$(BOOT1) of=$(DISK_IMG) bs=512 count=$$BOOT1_SECTORS seek=1; \

@@ -1,6 +1,8 @@
 org 0x1000
 bits 16
 
+; these get re-defined by the makefile and 
+; passed in dynamically through nasm flags
 %ifndef KERNEL_LBA
 %define KERNEL_LBA 17
 %endif
@@ -56,11 +58,10 @@ b1_enter_protected_mode:
 
     call b1_newline
 
-    mov bx, b1_s_protected
-    call b1_print
-
-    ; call b1_enable_a20 ; enable A20
+    ; a20 is already enabled by the bios! less for me to do!
     call b1_load_kernel ; load kernel into 0x00010000
+
+    print_string b1_s_protected
 
     cli ; disable interrupts
 
@@ -75,6 +76,7 @@ b1_enter_protected_mode:
     mov eax, cr0
     or eax, 1
     mov cr0, eax ; yay, 32-bit mode!!
+
 
     ; after this is done, the instruction pipeline needs to be cleared.
     ; to do this, we perform a far jump:
@@ -362,23 +364,30 @@ b1_kernel_dap:
 
 b1_load_kernel:
 
+    print_string b1_s_loading_kernel
+
 	push ax
 	push bx
 	push cx
 	push dx
 	push si
 
-	; check extensions
+	; reset disk
+	mov ah, 0x00
+	mov dl, 0x80
+	int 0x13
+
+	; check extensions present
 	mov ah, 0x41
 	mov bx, 0x55aa
+	mov dl, 0x80
 	int 0x13
 	cmp bx, 0xaa55
 	jne b1_panic
 	test cx, 1
 	jz b1_panic
 
-	mov ah, 0x41 ; "check extensions present" service
-
+	; read disk
 	mov si, b1_kernel_dap
 	mov ah, 0x42
 	mov dl, 0x80
@@ -390,49 +399,18 @@ b1_load_kernel:
 	pop cx
 	pop bx
 	pop ax
+
+	print_string b1_s_success
 	ret
 
-b1_enable_a20:
-	; enable A20 via keyboard controller method
-	call .b1_wait_input
-	mov al, 0xAD ; disable keyboard
-	out 0x64, al
-
-	call .b1_wait_input
-	mov al, 0xD0 ; read output port command
-	out 0x64, al
-
-	call .b1_wait_output
-	in al, 0x60	; read current output port
-	or al, 0000_0010b ; set A20 (bit 1)
-
-	call .b1_wait_input
-	mov ah, al ; save value in ah
-	mov al, 0xD1 ; write output port command
-	out 0x64, al
-	call .b1_wait_input
-	mov al, ah
-	out 0x60, al
-
-	call .b1_wait_input
-	mov al, 0xAE ; re-enable keyboard
-	out 0x64, al
-	ret
-
-.b1_wait_input:
-	in al, 0x64
-	test al, 0000_0010b	; input buffer full?
-	jnz .b1_wait_input
-	ret
-
-.b1_wait_output:
-	in al, 0x64
-	test al, 0000_0001b	; output buffer full?
-	jz .b1_wait_output
-	ret
 
 [bits 32]
 start_protected_mode:
+
+    ; enable a20 (fast method)
+    in al, 0x92
+    or al, 2
+    out 0x92, al
 
     ; set up flat data segments and a 32-bit stack
     mov ax, 10h
@@ -445,11 +423,10 @@ start_protected_mode:
 
     call pm_print_welcome
 
-    ; jump to kernel entry linked at 0x00010000
-    jmp 8:10000h
-
-    pm_kernel_run_loop: hlt
-    jmp pm_kernel_run_loop ; juuust in case
+    ; jump to kernel entry linked at 0x000101e0 (kernel_main)
+    ; this is so stupid
+    jmp 8:101e0h
+    jmp $
 
 pm_print_welcome:
 
