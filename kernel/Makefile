@@ -8,8 +8,10 @@ BUILD_DIR = ../build/kernel
 CFLAGS = -m32 -ffreestanding -O2 -Wall -Wextra -I$(SRC_DIR)
 LDFLAGS = -m elf_i386 -T linker.ld -nostdlib
 
-# get all c files
-SRC = $(wildcard $(SRC_DIR)/*.c)
+# get all c files, but ensure kernel.c comes first
+KERNEL_SRC = $(SRC_DIR)/kernel.c
+OTHER_SRC = $(filter-out $(KERNEL_SRC), $(wildcard $(SRC_DIR)/*.c))
+SRC = $(KERNEL_SRC) $(OTHER_SRC)
 OBJ = $(SRC:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
 
 # output

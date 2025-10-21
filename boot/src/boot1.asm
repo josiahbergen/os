@@ -62,6 +62,11 @@ b1_enter_protected_mode:
 
     print_string b1_s_protected
 
+    ; reset video to a clean slate
+    xor ah, ah ; set video mode
+    mov al, 0x03 ; 80x25ch vga, see https://mendelson.org/wpdos/videomodes.txt
+    int 0x10
+
     cli ; disable interrupts
 
     ; set constants for the addresses of the code and data segments
@@ -95,7 +100,7 @@ b1_draw_navbar:
     mov [b1_cursor_pos], dx
 
     mov ah, 0x02 ; set cursor position
-    mov dx, 0x01500 ; col:row
+    mov dx, 0x01400 ; col:row
     int 0x10
 
     mov ah, 0x09 ; write character and attribte at cursor position
@@ -104,31 +109,35 @@ b1_draw_navbar:
     mov cx, 0x50 ; number of times to print (85)
     int 0x10
 
-    mov dl, 0x00
+    mov dl, 0x00 ; cursor position
+    mov cx, 0x0f ; num of chars to print
+
     cmp [b1_navbar_selection], 0x01
     jne _reboot_not_selected
     mov dl, 0x12
+    mov cx, 0x0b
     _reboot_not_selected:
 
     cmp [b1_navbar_selection], 0x02
     jne _panic_not_selected
     mov dl, 0x20
+    mov cx, 0x09
     _panic_not_selected:
 
     cmp [b1_navbar_selection], 0x03
     jne _nothing_not_selected
     mov dl, 0x2c
+    mov cx, 0x0e
     _nothing_not_selected:
 
-    ; draw a red pixel at the address we just decided
+    ; draw a red line at the address we just decided
     mov ah, 0x02 ; set cursor position
-    mov dh, 0x15 ; to row 0x14 (the col is set by the logic above)
     int 0x10
     mov ah, 0x09 ; write character and attribte at cursor position
     mov al, " " ; character
     mov bl, 0xcf ; color: black on white
-    mov cx, 0x01 ; number of chars to print
     int 0x10
+
     mov ah, 0x02 ; reset cursor position
     xor dl, dl ; to col 0
     int 0x10
@@ -147,9 +156,6 @@ b1_draw_loop:
     _b1_draw_input_loop:
     xor ah, ah
     int 0x16
-
-    cmp ax, 0x3920 ; space
-    je b1_enter_protected_mode
 
     cmp ax, 0x1c0d ; enter
     je _b1_draw_pressed_enter
@@ -192,7 +198,16 @@ b1_draw_loop:
     cmp [b1_navbar_selection], 0x02
     je b1_panic
 
-    jmp b1_draw_loop ; do nothing is selected
+    jmp b1_draw_nothing ; do nothing is selected
+
+b1_draw_nothing:
+    xor ah, ah ; set video mode
+    mov al, 0x03 ; 80x25ch vga
+    int 0x10
+    print_string b1_s_nothing
+    xor ah, ah
+    int 0x16
+    call start
 
 b1_panic:
     xor ah, ah ; set video mode
@@ -421,9 +436,8 @@ start_protected_mode:
 
     call pm_print_welcome
 
-    ; jump to kernel entry linked at 0x000101e0 (kernel_main)
-    ; this is so stupid
-    jmp 8:101e0h
+    ; jump to kernel entry linked at 0x00010000 (kernel_main)
+    jmp 8:10000h
     jmp $
 
 pm_print_welcome:
