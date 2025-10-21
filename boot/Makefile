@@ -1,14 +1,11 @@
 BUILD_DIR=../build/boot
 SRC_DIR=src
 
-# discover sources from src directory, exclude util.asm (included via %include)
-BOOTLOADER_SRCS := $(filter-out $(SRC_DIR)/util.asm,$(wildcard $(SRC_DIR)/*.asm))
-BOOTLOADER_OBJS := $(patsubst $(SRC_DIR)/%.asm,$(BUILD_DIR)/%.o,$(BOOTLOADER_SRCS))
+# discover sources from src directory, exclude stuff that is %included
+SRC := $(SRC_DIR)/boot0.asm $(SRC_DIR)/boot1.asm
+OBJ := $(patsubst $(SRC_DIR)/%.asm,$(BUILD_DIR)/%.o,$(SRC))
 
-all: $(BOOTLOADER_OBJS)
-
-# ensure boot1 is rebuilt when util.asm changes
-$(BUILD_DIR)/boot1.o: $(SRC_DIR)/util.asm
+all: $(OBJ)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.asm
 	@mkdir -p $(BUILD_DIR)

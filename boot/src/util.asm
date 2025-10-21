@@ -119,7 +119,7 @@ b1_background_init:
     int 0x10
 
     ; draw the top line
-    mov bh, 0x70
+    mov bh, 0xf0
     mov ah, 0x07
     int 0x10
 

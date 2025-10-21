@@ -1,7 +1,7 @@
 org 0x1000
 bits 16
 
-; these get re-defined by the makefile and 
+; these get re-defined by the makefile and
 ; passed in dynamically through nasm flags
 %ifndef KERNEL_LBA
 %define KERNEL_LBA 17
@@ -35,9 +35,8 @@ start:
     print_string b1_s_title
     print_string b1_s_welcome
 
-    print_string b1_s_info
-    call b1_get_memory
     call b1_set_video
+    call b1_get_memory
     call b1_newline
 
     ; load the global descriptor table:
@@ -101,24 +100,24 @@ b1_draw_navbar:
 
     mov ah, 0x09 ; write character and attribte at cursor position
     mov al, " " ; character
-    mov bl, 0xf0 ; color: black on white
+    mov bl, 0x0f ; color: black on white
     mov cx, 0x50 ; number of times to print (85)
     int 0x10
 
-    mov dl, 0x09
+    mov dl, 0x00
     cmp [b1_navbar_selection], 0x01
     jne _reboot_not_selected
-    mov dl, 0x1b
+    mov dl, 0x12
     _reboot_not_selected:
 
     cmp [b1_navbar_selection], 0x02
     jne _panic_not_selected
-    mov dl, 0x29
+    mov dl, 0x20
     _panic_not_selected:
 
     cmp [b1_navbar_selection], 0x03
     jne _nothing_not_selected
-    mov dl, 0x35
+    mov dl, 0x2c
     _nothing_not_selected:
 
     ; draw a red pixel at the address we just decided
@@ -182,7 +181,6 @@ b1_draw_loop:
     _b1_draw_loop_right:
     mov [b1_navbar_selection], 0x00
     jmp b1_draw_loop
-
 
     _b1_draw_pressed_enter:
     cmp [b1_navbar_selection], 0x00
