@@ -1,4 +1,4 @@
-b1_s_title: db "WELCOME TO THE JOSOS BOOTLOADER (v0.01)", 10, 0
+b1_s_title: db "WELCOME TO THE JOSOS BOOTLOADER (v0.02)", 10, 0
 b1_s_welcome: db "hi marko!", 10, 10, 0
 
 b1_s_memory: db "conventional memory (kb): ", 0
