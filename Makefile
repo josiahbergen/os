@@ -1,38 +1,119 @@
-BUILD_DIR=build
-BOOT0=$(BUILD_DIR)/boot/boot0.o
-BOOT1=$(BUILD_DIR)/boot/boot1.o
-KERNEL_BIN=$(BUILD_DIR)/kernel/kernel.bin
-DISK_IMG=$(BUILD_DIR)/disk/disk.img
+# OS Build System
+# Main Makefile for building the operating system
 
-all: clear prep boot kernel disk qemu
+# Build configuration
+BUILD_DIR = build
+SYSROOT = sysroot
+HOST = i686-elf
+HOSTARCH = i386
 
-.PHONY: disk boot kernel
+# Toolchain
+CROSS_CC = $(HOST)-gcc
+CROSS_LD = $(HOST)-ld
+CROSS_AR = $(HOST)-ar
+CROSS_AS = $(HOST)-as
+CROSS_OBJCOPY = $(HOST)-objcopy
 
+# Paths
+BOOT0 = $(BUILD_DIR)/boot/boot0.o
+BOOT1 = $(BUILD_DIR)/boot/boot1.o
+KERNEL_BIN = $(BUILD_DIR)/kernel/kernel.bin
+DISK_IMG = $(BUILD_DIR)/disk/disk.img
+
+# Environment variables
+export HOST
+export HOSTARCH
+export DESTDIR = $(CURDIR)/$(SYSROOT)
+export MAKE
+export AR = $(CROSS_AR)
+export AS = $(CROSS_AS)
+export CC = $(CROSS_CC) --sysroot=$(CURDIR)/$(SYSROOT)
+export PREFIX = /usr
+export EXEC_PREFIX = $(PREFIX)
+export BOOTDIR = /boot
+export LIBDIR = $(EXEC_PREFIX)/lib
+export INCLUDEDIR = $(PREFIX)/include
+export CFLAGS = -O2 -g
+export CPPFLAGS =
+
+# Work around that the -elf gcc targets doesn't have a system include directory
+ifeq ($(findstring -elf,$(HOST)),-elf)
+export CC = $(CROSS_CC) --sysroot=$(CURDIR)/$(SYSROOT) -isystem=$(INCLUDEDIR)
+endif
+
+# Projects
+SYSTEM_HEADER_PROJECTS = libc kernel
+PROJECTS = libc kernel
+
+.PHONY: all clean prep headers libc boot kernel disk qemu help
+
+# Default target
+all: clear prep headers libc boot kernel disk qemu
+
+# Help target
+help:
+	@echo "available make targets:"
+	@echo "you could probably look at the readme for help as well"
+	@echo "  all         build it all (default)"
+	@echo "  clean       clean all build artifacts"
+	@echo "  prep        create build directories"
+	@echo "  libc        build libc library"
+	@echo "  boot        build bootloader"
+	@echo "  kernel      build kernel"
+	@echo "  disk        create disk image"
+	@echo "  qemu        launch qemu"
+	@echo "  help        show this help"
+
+# Clear screen
 clear:
 	@clear
 
+# Create build directories
 prep:
-	@mkdir -p build/boot
-	@mkdir -p build/kernel
-	@mkdir -p build/disk
+	@echo "creating build directories..."
+	@mkdir -p $(BUILD_DIR)/boot
+	@mkdir -p $(BUILD_DIR)/kernel
+	@mkdir -p $(BUILD_DIR)/disk
 
-boot:
-	@echo "all: building bootloader..."
-	@make -s -C boot
+# Install system headers
+headers: prep
+	@echo "installing system headers..."
+	@mkdir -p $(SYSROOT)
+	@for project in $(SYSTEM_HEADER_PROJECTS); do \
+		(cd $$project && $(MAKE) -s install-headers); \
+	done
 
-kernel:
-	@make -s -C kernel
-	@echo "all: building kernel..."
+# Build libc library
+libc: headers
+	@echo "building libc library..."
+	@$(MAKE) -s -C libc install
 
-disk:
+# Build bootloader
+boot: prep
+	@echo "building bootloader..."
+	@$(MAKE) -s -C boot
+
+# Build kernel
+kernel: libc
+	@echo "building kernel..."
+	@$(MAKE) -s -C kernel
+
+# Create disk image
+disk: boot kernel
+	@echo "creating disk image..."
 	@./scripts/disk.sh
 
-qemu:
-	@echo "all: launching qemu..."
+# Launch QEMU
+qemu: disk
+	@echo "launching qemu..."
 	@qemu-system-i386 -drive file=$(DISK_IMG),format=raw,index=0,media=disk -boot c
 
+# Clean build artifacts
 clean:
-	@make -C boot clean
-	@make -C kernel clean
+	@echo "clean: removing build artifacts..."
+	@$(MAKE) -s -C boot clean
+	@$(MAKE) -s -C kernel clean
+	@$(MAKE) -s -C libc clean
 	@rm -rf $(BUILD_DIR)/disk
-	@echo "clean: done"
+	@rm -rf $(SYSROOT)
+	@echo "clean: done."

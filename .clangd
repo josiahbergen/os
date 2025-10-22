@@ -1,0 +1,14 @@
+CompileFlags:
+  Add:
+    - -m32
+    - -ffreestanding
+    - -fno-builtin
+    - -isystem
+    - -O2
+    - -Wall
+    - -Wextra
+    - -I/Users/josiah/Projects/os/kernel/include
+    - -I/Users/josiah/Projects/os/libc/include
+    - -I/Users/josiah/Projects/os/libc/include/sys
+    - -I./Users/josiah/Projects/os/kernel/arch/i386
+    - -xc
