@@ -26,11 +26,11 @@ BOOT1_LBA=1
 KERNEL_LBA=$((BOOT1_LBA + BOOT1_SECTORS))
 END_LBA=$((KERNEL_LBA + KERNEL_SECTORS))
 
-echo "all: amending lba macros..."
+echo "make: amending lba macros..."
 make -s -C boot clean
 make -s -C boot EXTRA_NASM_FLAGS="-D B1_SECTORS=$BOOT1_SECTORS -D KERNEL_SECTORS=$KERNEL_SECTORS -D KERNEL_LBA=$KERNEL_LBA"
 
-echo "all: writing disk image to $DISK_IMG..."
+echo "make: writing disk image to $DISK_IMG..."
 
 BOOT0_BYTES=$(dd conv=notrunc if="$BOOT0" of="$DISK_IMG" bs=512 count=1 seek=0 2>&1 | grep 'bytes transferred' | awk '{print $1}')
 BOOT1_BYTES=$(dd conv=notrunc if="$BOOT1" of="$DISK_IMG" bs=512 count="$BOOT1_SECTORS" seek=1 2>&1 | grep 'bytes transferred' | awk '{print $1}')
@@ -41,4 +41,4 @@ echo "______________________________________"
 printf "| %-9s | %-9s | %-10s |\n" "boot0 ($BOOT0_LBA)" "boot1 ($BOOT1_LBA)" "kernel ($KERNEL_LBA)"
 printf "| %-9s | %-9s | %-10s |\n" "$BOOT0_BYTES b" "$BOOT1_BYTES b" "$KERNEL_BYTES b"
 echo "‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾"
-echo "all: build complete."
+echo "make: build complete!"

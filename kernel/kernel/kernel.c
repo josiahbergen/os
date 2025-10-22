@@ -5,7 +5,7 @@
 
 void kernel_main(void) {
     terminal_initialize();
-    printf("kernel init!\nand another line of text");
+    printf("kernel: init!\n");
 
-    halt();
+    abort();
 }

@@ -6,6 +6,8 @@
 # reference docs
 inter61a
 
-# built images/binaries
+# built images/binaries/files
+
 /build
+/sysroot
 *.img

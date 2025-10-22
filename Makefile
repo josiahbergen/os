@@ -48,7 +48,7 @@ PROJECTS = libc kernel
 .PHONY: all clean prep headers libc boot kernel disk qemu help
 
 # Default target
-all: clear prep headers libc boot kernel disk qemu
+all: clean prep headers libc boot kernel disk qemu
 
 # Help target
 help:
@@ -70,14 +70,14 @@ clear:
 
 # Create build directories
 prep:
-	@echo "creating build directories..."
+	@echo "make: creating build directories..."
 	@mkdir -p $(BUILD_DIR)/boot
 	@mkdir -p $(BUILD_DIR)/kernel
 	@mkdir -p $(BUILD_DIR)/disk
 
 # Install system headers
 headers: prep
-	@echo "installing system headers..."
+	@echo "make: installing system headers..."
 	@mkdir -p $(SYSROOT)
 	@for project in $(SYSTEM_HEADER_PROJECTS); do \
 		(cd $$project && $(MAKE) -s install-headers); \
@@ -85,27 +85,27 @@ headers: prep
 
 # Build libc library
 libc: headers
-	@echo "building libc library..."
+	@echo "make: building libc..."
 	@$(MAKE) -s -C libc install
 
 # Build bootloader
 boot: prep
-	@echo "building bootloader..."
+	@echo "make: building bootloader..."
 	@$(MAKE) -s -C boot
 
 # Build kernel
 kernel: libc
-	@echo "building kernel..."
+	@echo "make: building kernel..."
 	@$(MAKE) -s -C kernel
 
 # Create disk image
 disk: boot kernel
-	@echo "creating disk image..."
+	@echo "make: creating disk image..."
 	@./scripts/disk.sh
 
 # Launch QEMU
 qemu: disk
-	@echo "launching qemu..."
+	@echo "make: launching qemu..."
 	@qemu-system-i386 -drive file=$(DISK_IMG),format=raw,index=0,media=disk -boot c
 
 # Clean build artifacts
