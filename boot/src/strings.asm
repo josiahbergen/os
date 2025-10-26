@@ -1,4 +1,4 @@
-b1_s_title: db "WELCOME TO THE JAIDEOS BOOTLOADER (v0.02)", 10, 0
+b1_s_title: db "JAIDEOS BOOTLOADER (v0.02)", 10, 0
 b1_s_welcome: db "hi marko!", 10, 10, 0
 
 b1_s_memory: db "conventional memory (kb): ", 0
@@ -8,7 +8,7 @@ b1_s_set_video: db "setting video mode... ", 0
 b1_s_video_info: db "current video mode: 720x400px (80x25ch) 16 color VGA", 0
 b1_s_load_gdt: db "loading global descriptor table... ", 0
 
-b1_s_navbar_text: db "[ LOAD KERNEL ]   [ RESTART ]   [ PANIC ]   [ DO NOTHING ]", 0
+b1_s_navbar_text: db "[ LOAD KERNEL ]   [ RESET ]   [ PANIC ]   [ DO NOTHING ]", 0
 b1_s_load_finished: db 10, "press ENTER to boot or use the arrow keys to select another action. ", 10, 0
 
 b1_s_loading_kernel: db "loading kernel into 0x00010000... ", 0

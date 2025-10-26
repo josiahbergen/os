@@ -48,7 +48,8 @@ PROJECTS = libc kernel
 .PHONY: all clean prep headers libc boot kernel disk qemu help
 
 # Default target
-all: clean prep headers libc boot kernel disk qemu
+all: prep headers libc boot kernel disk qemu
+tidy: prep headers libc boot kernel disk qemu clean
 
 # Help target
 help:
@@ -106,7 +107,7 @@ disk: boot kernel
 # Launch QEMU
 qemu: disk
 	@echo "make: launching qemu..."
-	@qemu-system-i386 -drive file=$(DISK_IMG),format=raw,index=0,media=disk -boot c
+	@qemu-system-i386 -drive file=$(DISK_IMG),format=raw,index=0,media=disk -boot c -d cpu_reset,page
 
 # Clean build artifacts
 clean:
