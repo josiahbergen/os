@@ -115,18 +115,18 @@ b1_draw_navbar:
     cmp [b1_navbar_selection], 0x01
     jne _reboot_not_selected
     mov dl, 0x12
-    mov cx, 0x0b
+    mov cx, 0x09
     _reboot_not_selected:
 
     cmp [b1_navbar_selection], 0x02
     jne _panic_not_selected
-    mov dl, 0x20
+    mov dl, 0x1e
     mov cx, 0x09
     _panic_not_selected:
 
     cmp [b1_navbar_selection], 0x03
     jne _nothing_not_selected
-    mov dl, 0x2c
+    mov dl, 0x2a
     mov cx, 0x0e
     _nothing_not_selected:
 
@@ -135,7 +135,7 @@ b1_draw_navbar:
     int 0x10
     mov ah, 0x09 ; write character and attribte at cursor position
     mov al, " " ; character
-    mov bl, 0xcf ; color: black on white
+    mov bl, 0xcf ; color
     int 0x10
 
     mov ah, 0x02 ; reset cursor position
@@ -231,11 +231,8 @@ b1_panic:
     jmp b1_reboot
 
 b1_reboot:
-    xor ah, ah ; set video mode
-    mov al, 0x03
-    int 0x10
-    int 0x19
-    jmp $
+    ; jump to the reset vector
+    jmp 0xffff:0
 
 b1_get_memory:
     ; get low memory
