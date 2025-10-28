@@ -7,9 +7,10 @@ b1_s_high_memory: db "64k blocks of extended memory above 16m: ", 0
 b1_s_set_video: db "setting video mode... ", 0
 b1_s_video_info: db "current video mode: 720x400px (80x25ch) 16 color VGA", 0
 b1_s_load_gdt: db "loading global descriptor table... ", 0
+b1_s_enter_menu: db 10, "press ESCAPE to enter the bootloader menu... ", 0
 
 b1_s_navbar_text: db "[ LOAD KERNEL ]   [ RESET ]   [ PANIC ]   [ DO NOTHING ]", 0
-b1_s_load_finished: db 10, "press ENTER to boot or use the arrow keys to select another action. ", 10, 0
+b1_s_load_finished: db 10, 10, "use the ARROW KEYS to select another action. ", 10, "press ENTER to select an action.", 10, 0
 
 b1_s_loading_kernel: db "loading kernel into 0x00010000... ", 0
 b1_s_enabling_a20: db "checking and enabling a20... ", 0

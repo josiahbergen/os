@@ -7,26 +7,13 @@
 #define LOG_COL_ERROR 0x0c
 #define LOG_COL_PANIC 0xc
 
-#define KERNEL_INFO(m)                                                         \
-    do {                                                                       \
-        terminal_setcolor(LOG_COL_INFO);                                       \
-        printf("kernel: %s\n", m);                                             \
-    } while (0)
+#define KERNEL_LOG(lvl, msg) KERNEL_LOG_MAIN("kernel :: ", lvl, msg, "\n")
+#define KERNEL_LOG_NBR(lvl, msg) KERNEL_LOG_MAIN("kernel :: ", lvl, msg, "")
+#define KERNEL_LOG_CUSTOM(pre, lvl, msg, end)                                  \
+    KERNEL_LOG_MAIN(pre, lvl, msg, end)
 
-#define KERNEL_LOG(m)                                                          \
+#define KERNEL_LOG_MAIN(pre, lvl, msg, end)                                    \
     do {                                                                       \
-        terminal_setcolor(LOG_COL_LOG);                                        \
-        printf("kernel: %s\n", m);                                             \
-    } while (0)
-
-#define KERNEL_WARN(m)                                                         \
-    do {                                                                       \
-        terminal_setcolor(LOG_COL_WARN);                                       \
-        printf("kernel: warn: %s\n", m);                                       \
-    } while (0)
-
-#define KERNEL_ERROR(m)                                                        \
-    do {                                                                       \
-        terminal_setcolor(LOG_COL_ERROR);                                      \
-        printf("kernel: error: %s\n", m);                                      \
+        terminal_setcolor(LOG_COL_##lvl);                                      \
+        printf("%s%s%s", pre, msg, end);                                       \
     } while (0)

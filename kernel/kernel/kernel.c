@@ -6,13 +6,13 @@
 void kernel_main(void) {
     terminal_initialize();
 
-    KERNEL_INFO("kernel_main");
-    KERNEL_INFO("gdt init...");
+    KERNEL_LOG(INFO, "kernel_main");
 
-    // panic("global discriptor table not implemented");
+    // load global descriptor table (for real)
+    KERNEL_LOG_NBR(LOG, "gdt init... ");
+    // gdt_init();
 
-    // KERNEL_WARN("uh oh");
-    KERNEL_ERROR("global discriptor table not implemented");
+    KERNEL_LOG_CUSTOM("", ERROR, "failed", "\n");
 
     halt();
 }

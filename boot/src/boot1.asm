@@ -49,8 +49,32 @@ start:
     mov bx, b1_s_success
     call b1_print
 
-    print_string b1_s_load_finished
+    print_string b1_s_enter_menu
 
+    mov ah, 0x00 ; get system timer
+    int 0x1a
+    mov bx, dx ; starting timer count (low 16 bits)
+
+b1_wait_key_loop:
+
+    ; check for keypress
+    mov ax, 0x0100
+    int 0x16
+    cmp ax, 0x011b
+    je b1_menu_key_pressed
+
+    ; check status of event timer
+    mov ah, 0x00
+    int 0x1a
+    sub dx, bx ; compute elapsed ticks (16-bit wrap ok for short waits)
+    cmp dx, 18 ; 1 second (18.2 ticks/sec)
+    jb b1_wait_key_loop ; if less, keep waiting
+
+    jmp b1_enter_protected_mode
+
+b1_menu_key_pressed:
+
+    print_string b1_s_load_finished
     jmp b1_draw_loop
 
 b1_enter_protected_mode:
@@ -76,11 +100,10 @@ b1_enter_protected_mode:
     ; enter protected mode:
     ; to enter protected mode, we need to set the last bit
     ; of a special register (cr0) to 1. to do this, we need to
-    ; set eax (a 32-bit register) and copy its value into cr0
+    ; set eax and copy its value into cr0
     mov eax, cr0
     or eax, 1
     mov cr0, eax ; yay, 32-bit mode!!
-
 
     ; after this is done, the instruction pipeline needs to be cleared.
     ; to do this, we perform a far jump:
