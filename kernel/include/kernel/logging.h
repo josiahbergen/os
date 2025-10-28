@@ -3,7 +3,7 @@
 
 #define LOG_COL_INFO 0x08
 #define LOG_COL_LOG 0x07
-#define LOG_COL_WARN 0x0e
+#define LOG_COL_WARN 0x06
 #define LOG_COL_ERROR 0x0c
 #define LOG_COL_PANIC 0xc
 

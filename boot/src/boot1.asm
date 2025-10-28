@@ -29,26 +29,6 @@ bits 16
 start:
     ; we made it to 0x0000:0x1000. what next?
     ; top of the stack is 0x0000:0x7c00
-
-    call b1_background_init
-
-    print_string b1_s_title
-    print_string b1_s_welcome
-
-    call b1_set_video
-    call b1_get_memory
-    call b1_newline
-
-    ; load the global descriptor table:
-    ; the descriptor lives at b1_gdt_descriptor, and
-    ; we can use the lgdt to load it for us.
-    mov bx, b1_s_load_gdt
-    call b1_print
-
-    lgdt [b1_gdt_descriptor] ; the magic!
-    mov bx, b1_s_success
-    call b1_print
-
     print_string b1_s_enter_menu
 
     mov ah, 0x00 ; get system timer
@@ -61,18 +41,28 @@ b1_wait_key_loop:
     mov ax, 0x0100
     int 0x16
     cmp ax, 0x011b
-    je b1_menu_key_pressed
+    je b1_main_menu_init
+    cmp ax, 0x1c0d
+    je b1_enter_protected_mode
 
     ; check status of event timer
     mov ah, 0x00
     int 0x1a
     sub dx, bx ; compute elapsed ticks (16-bit wrap ok for short waits)
-    cmp dx, 18 ; 1 second (18.2 ticks/sec)
+    cmp dx, 27 ; 1.5 seconds ish (18.2 ticks/sec)
     jb b1_wait_key_loop ; if less, keep waiting
 
     jmp b1_enter_protected_mode
 
-b1_menu_key_pressed:
+b1_main_menu_init:
+
+    call b1_background_init
+
+    print_string b1_s_title
+    ; print_string b1_s_welcome
+
+    call b1_set_video
+    call b1_get_memory
 
     print_string b1_s_load_finished
     jmp b1_draw_loop
@@ -80,6 +70,16 @@ b1_menu_key_pressed:
 b1_enter_protected_mode:
 
     call b1_newline
+
+    ; load the global descriptor table:
+    ; the descriptor lives at b1_gdt_descriptor, and
+    ; we can use the lgdt to load it for us.
+    mov bx, b1_s_load_gdt
+    call b1_print
+
+    lgdt [b1_gdt_descriptor] ; the magic!
+    mov bx, b1_s_success
+    call b1_print
 
     ; a20 is already enabled by the bios! less for me to do!
     call b1_load_kernel ; load kernel into 0x00010000
@@ -230,7 +230,7 @@ b1_draw_nothing:
     print_string b1_s_nothing
     xor ah, ah
     int 0x16
-    call start
+    jmp b1_main_menu_init
 
 b1_panic:
     xor ah, ah ; set video mode
@@ -245,16 +245,27 @@ b1_panic:
     mov bx, b1_s_panic
     call b1_print
 
-    mov ah, 0x86
-    ; we want a delay of 0x004c4b40
-    ; the timer is in cx:dx, thus we need 004c:4b40
-    mov cx, 0x003d
-    mov dx, 0x0900
-    int 0x15
+    mov ah, 0x00 ; get system timer
+    int 0x1a
+    mov bx, dx ; starting timer count (low 16 bits)
+
+b1_panic_wait_loop:
+
+    ; check for keypress
+    mov ah, 0x01
+    int 0x16
+    jne b1_reboot
+
+    ; check status of event timer
+    mov ah, 0x00
+    int 0x1a
+    sub dx, bx ; compute elapsed ticks (16-bit wrap ok for short waits)
+    cmp dx, 182 ; 10 seconds (18.2 ticks/sec)
+    jb b1_panic_wait_loop ; if less, keep waiting
     jmp b1_reboot
 
 b1_reboot:
-    ; jump to the reset vector
+    ; jump to reset vector
     jmp 0xffff:0
 
 b1_get_memory:
