@@ -82,7 +82,7 @@ b1_enter_protected_mode:
     call b1_print
 
     ; a20 is already enabled by the bios! less for me to do!
-    call b1_load_kernel ; load kernel into 0x00010000
+    call b1_load_kernel ; load kernel into 0x00100000 (1mb)
 
     print_string b1_s_protected
 
@@ -403,6 +403,7 @@ b1_kernel_dap:
 	dw KERNEL_SECTORS ; number of blocks to read
 	dw 0x0000 ; offset
 	dw 0x1000 ; segment (this gives us 0x00010000)
+    ; we will copy the kernel to 0x00100000 (1mb) later
 	dd KERNEL_LBA ; LBA low dword
 	dd 0x00000000 ; LBA high dword
 
@@ -447,7 +448,6 @@ b1_load_kernel:
 	print_string b1_s_success
 	ret
 
-
 [bits 32]
 start_protected_mode:
 
@@ -456,7 +456,7 @@ start_protected_mode:
     or al, 2
     out 0x92, al
 
-    ; set up flat data segments and a 32-bit stack
+    ; set up flat data segments and a temporary 32-bit stack
     mov ax, 10h
     mov ds, ax
     mov es, ax
@@ -467,17 +467,29 @@ start_protected_mode:
 
     call pm_print_welcome
 
-    ; jump to kernel entry linked at 0x00010000 (kernel_main)
-    jmp 8:10000h
-    jmp $
+    ; copy kernel from temporary location (64kb) to final location (1mb)
+    ; kernel was loaded at 0x00010000 because DAP segment:offset can't directly address 1mb
+    mov esi, 0x00010000  ; source (at 64kb)
+    mov edi, 0x00100000  ; destination (at 1mb)
+
+    ; convieniently, we already have the size of the kernel is sectors: KERNEL_SECTORS
+    ; so we can use that to calculate the size in dwords:
+    mov ecx, KERNEL_SECTORS * 512 / 4 ; dwords = sectors * 512 / 4
+    cld ; clear direction flag (copy forward)
+    rep movsd ; copy kernel to 1mb
+
+    ; jump to kernel entry point at physical address 0x00100000
+    ; the kernel's boot.s will be responsible for setting up paging and the stack
+    jmp 0x00100000
 
 pm_print_welcome:
 
     ; video memory is at 0xb8000
     ; print "OK" in the top right
-    mov ah, 0xF2 ;  light gray on black
+    mov ah, 0xF2 ;  green on white
     mov al, 'O'
     mov [0xb809c], ax
     mov al, 'K'
     mov [0xb809e], ax
     ret
+

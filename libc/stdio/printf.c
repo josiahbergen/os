@@ -1,6 +1,7 @@
 #include <limits.h>
 #include <stdarg.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -61,6 +62,37 @@ int printf(const char *restrict format, ...) {
             if (!print(str, len))
                 return -1;
             written += len;
+        } else if (*format == 'p') {
+            format++;
+            // get the pointer from args and cast to uintptr_t
+            void *ptr = va_arg(parameters, void *);
+            uintptr_t value = (uintptr_t)ptr;
+
+            char buffer[2 + sizeof(uintptr_t) * 2 + 1];
+            // buffer must contain "0x" + hex digits + NULL
+
+            buffer[0] = '0';
+            buffer[1] = 'x';
+            char *hex = &buffer[2];
+
+            for (int i = (sizeof(uintptr_t) * 2) - 1; i >= 0; i--) {
+                int nibble = value & 0xF;
+                hex[i] = (nibble < 10) ? ('0' + nibble) : ('a' + (nibble - 10));
+                value >>= 4;
+            }
+            // add NUL to the end
+            buffer[2 + sizeof(uintptr_t) * 2] = '\0';
+
+            size_t len = strlen(buffer);
+
+            if (maxrem < len) {
+                // TODO: Set errno to EOVERFLOW.
+                return -1;
+            }
+            if (!print(buffer, len))
+                return -1;
+            written += len;
+
         } else {
             format = format_begun_at;
             size_t len = strlen(format);

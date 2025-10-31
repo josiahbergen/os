@@ -12,3 +12,5 @@ CompileFlags:
     - -I/Users/josiah/Projects/os/libc/include/sys
     - -I./Users/josiah/Projects/os/kernel/arch/i386
     - -xc
+Diagnostics:
+  UnusedIncludes: None

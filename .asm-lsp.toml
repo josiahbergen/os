@@ -9,3 +9,17 @@ compile_flags_txt = [
   "-i/Users/josiah/Projects/os/boot/src/",
   "-o /dev/null"
 ]
+
+[[project]]
+path = "kernel/arch/i386/"
+assembler = "gas"
+instruction_set = "x86"
+
+[project.opts]
+compiler = "gcc"
+compile_flags_txt = [
+  "-m32",
+  "-x",
+  "assembler",
+  "-c"
+]

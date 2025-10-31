@@ -8,11 +8,19 @@
 #define LOG_COL_PANIC 0x0c
 #define LOG_COL_SUCCESS 0x02
 
-#define KERNEL_LOG(lvl, msg) KERNEL_LOG_BASE("kernel :: ", lvl, msg, "\n")
-#define KERNEL_LOG_BEG(lvl, msg) KERNEL_LOG_BASE("kernel :: ", lvl, msg, "")
-#define KERNEL_LOG_END(lvl, msg) KERNEL_LOG_BASE("", lvl, msg, "\n")
-#define KERNEL_LOG_BASE(pre, lvl, msg, end)                                    \
+#define KERNEL_LOG(lvl, fmt, ...)                                              \
+    KERNEL_LOG_BASE("kernel :: ", lvl, fmt, "\n", ##__VA_ARGS__)
+
+#define KERNEL_LOG_BEG(lvl, fmt, ...)                                          \
+    KERNEL_LOG_BASE("kernel :: ", lvl, fmt, "", ##__VA_ARGS__)
+
+#define KERNEL_LOG_END(lvl, fmt, ...)                                          \
+    KERNEL_LOG_BASE("", lvl, fmt, "\n", ##__VA_ARGS__)
+
+#define KERNEL_LOG_BASE(pre, lvl, fmt, end, ...)                               \
     do {                                                                       \
         terminal_setcolor(LOG_COL_##lvl);                                      \
-        printf("%s%s%s", pre, msg, end);                                       \
+        printf("%s", pre);                                                     \
+        printf(fmt, ##__VA_ARGS__);                                            \
+        printf("%s", end);                                                     \
     } while (0)

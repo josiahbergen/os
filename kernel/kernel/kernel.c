@@ -8,7 +8,7 @@
 void kernel_main(void) {
     terminal_initialize();
 
-    KERNEL_LOG(LOG, "kernel_main");
+    KERNEL_LOG(INFO, "kernel_main at virtual address %p", (void *)kernel_main);
     KERNEL_LOG(INFO, "hi marko!");
 
     // load global descriptor table (for real)
