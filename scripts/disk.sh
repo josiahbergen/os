@@ -37,8 +37,8 @@ BOOT1_BYTES=$(dd conv=notrunc if="$BOOT1" of="$DISK_IMG" bs=512 count="$BOOT1_SE
 KERNEL_BYTES=$(dd conv=notrunc if="$KERNEL_BIN" of="$DISK_IMG" bs=512 count="$KERNEL_SECTORS" seek="$KERNEL_LBA" 2>&1 | grep 'bytes transferred' | awk '{print $1}')
 
 # Pretty summary table
-echo "______________________________________"
-printf "| %-9s | %-9s | %-10s |\n" "boot0 ($BOOT0_LBA)" "boot1 ($BOOT1_LBA)" "kernel ($KERNEL_LBA)"
-printf "| %-9s | %-9s | %-10s |\n" "$BOOT0_BYTES b" "$BOOT1_BYTES b" "$KERNEL_BYTES b"
-echo "‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾"
+# echo "______________________________________"
+# printf "| %-9s | %-9s | %-10s |\n" "boot0 ($BOOT0_LBA)" "boot1 ($BOOT1_LBA)" "kernel ($KERNEL_LBA)"
+# printf "| %-9s | %-9s | %-10s |\n" "$BOOT0_BYTES b" "$BOOT1_BYTES b" "$KERNEL_BYTES b"
+# echo "‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾"
 echo "make: build complete!"

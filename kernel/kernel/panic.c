@@ -3,15 +3,17 @@
 #include <stdint.h>
 
 void panic(char *message) {
-    uint8_t panic_bg = 0x4f;
-    uint8_t panic_text = 0x4f;
 
-    terminal_fill(panic_bg);
-    terminal_setcolor(panic_text);
+    uint8_t col = 0x4f;
+
+    terminal_fill_lines(23, 3, col);
+    terminal_setcursor(0, 23);
+    terminal_setcolor(col);
     terminal_writestring("PANIC: ");
     terminal_writestring(message);
-    terminal_writestring("\n\neverything has gone terribly wrong\n"
-                         "press any key to restart the computer.\n");
+    terminal_writestring("\neverything has gone terribly wrong");
+
+    // TODO: reboot computer?
 
     halt();
 }

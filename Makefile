@@ -20,6 +20,8 @@ BOOT1 = $(BUILD_DIR)/boot/boot1.o
 KERNEL_BIN = $(BUILD_DIR)/kernel/kernel.bin
 DISK_IMG = $(BUILD_DIR)/disk/disk.img
 
+QEMU_FLAGS =
+
 # Environment variables
 export HOST
 export HOSTARCH
@@ -107,7 +109,7 @@ disk: boot kernel
 # Launch QEMU
 qemu: disk
 	@echo "make: launching qemu..."
-	@qemu-system-i386 -drive file=$(DISK_IMG),format=raw,index=0,media=disk -boot c
+	@qemu-system-i386 -drive file=$(DISK_IMG),format=raw,index=0,media=disk -boot c $(QEMU_FLAGS)
 
 # Clean build artifacts
 clean:

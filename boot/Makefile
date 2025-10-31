@@ -12,4 +12,4 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.asm
 	@nasm -i$(SRC_DIR) $(EXTRA_NASM_FLAGS) -f bin $< -o $@
 
 clean:
-	@rm -f $(BUILD_DIR)/*
+	@rm -rf $(BUILD_DIR)

@@ -5,14 +5,13 @@
 #define LOG_COL_LOG 0x07
 #define LOG_COL_WARN 0x06
 #define LOG_COL_ERROR 0x0c
-#define LOG_COL_PANIC 0xc
+#define LOG_COL_PANIC 0x0c
+#define LOG_COL_SUCCESS 0x02
 
-#define KERNEL_LOG(lvl, msg) KERNEL_LOG_MAIN("kernel :: ", lvl, msg, "\n")
-#define KERNEL_LOG_NBR(lvl, msg) KERNEL_LOG_MAIN("kernel :: ", lvl, msg, "")
-#define KERNEL_LOG_CUSTOM(pre, lvl, msg, end)                                  \
-    KERNEL_LOG_MAIN(pre, lvl, msg, end)
-
-#define KERNEL_LOG_MAIN(pre, lvl, msg, end)                                    \
+#define KERNEL_LOG(lvl, msg) KERNEL_LOG_BASE("kernel :: ", lvl, msg, "\n")
+#define KERNEL_LOG_BEG(lvl, msg) KERNEL_LOG_BASE("kernel :: ", lvl, msg, "")
+#define KERNEL_LOG_END(lvl, msg) KERNEL_LOG_BASE("", lvl, msg, "\n")
+#define KERNEL_LOG_BASE(pre, lvl, msg, end)                                    \
     do {                                                                       \
         terminal_setcolor(LOG_COL_##lvl);                                      \
         printf("%s%s%s", pre, msg, end);                                       \

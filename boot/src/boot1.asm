@@ -86,7 +86,7 @@ b1_enter_protected_mode:
 
     print_string b1_s_protected
 
-    ; reset video to a clean slate
+    ; reset screen
     xor ah, ah ; set video mode
     mov al, 0x03 ; 80x25ch vga, see https://mendelson.org/wpdos/videomodes.txt
     int 0x10
@@ -99,8 +99,8 @@ b1_enter_protected_mode:
 
     ; enter protected mode:
     ; to enter protected mode, we need to set the last bit
-    ; of a special register (cr0) to 1. to do this, we need to
-    ; set eax and copy its value into cr0
+    ; cr0 to 1. since we cannot edit cr0 directly, we need to
+    ; set the correct value in eax and copy its value into cr0
     mov eax, cr0
     or eax, 1
     mov cr0, eax ; yay, 32-bit mode!!
@@ -474,6 +474,7 @@ start_protected_mode:
 pm_print_welcome:
 
     ; video memory is at 0xb8000
+    ; print "OK" in the top right
     mov ah, 0xF2 ;  light gray on black
     mov al, 'O'
     mov [0xb809c], ax
