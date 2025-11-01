@@ -81,7 +81,7 @@ int printf(const char *restrict format, ...) {
                 value >>= 4;
             }
             // add NUL to the end
-            buffer[2 + sizeof(uintptr_t) * 2] = '\0';
+            buffer[2 + sizeof(uintptr_t) * 2] = NUL;
 
             size_t len = strlen(buffer);
 
@@ -92,7 +92,6 @@ int printf(const char *restrict format, ...) {
             if (!print(buffer, len))
                 return -1;
             written += len;
-
         } else {
             format = format_begun_at;
             size_t len = strlen(format);

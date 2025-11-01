@@ -4,6 +4,7 @@
 #include <sys/cdefs.h>
 
 #define EOF (-1)
+#define NUL (0)
 
 int printf(const char *__restrict, ...);
 int putchar(int);
