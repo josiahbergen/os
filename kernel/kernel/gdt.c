@@ -31,24 +31,19 @@ void encode_descriptor(uint64_t *descriptor, struct pretty_gdt_entry src) {
 
     // limit bits 0-15 (0-15)
     *descriptor |= (uint64_t)(src.limit & 0xFFFF);
-
     // base bits 0-23 (16-39)
     *descriptor |= (uint64_t)(src.base & 0xFFFFFF) << 16;
-
     // access byte (40-47)
     *descriptor |= (uint64_t)src.access << 40;
-
     // limit bits 16-19 (48-51)
     *descriptor |= (uint64_t)((src.limit >> 16) & 0x0F) << 48;
-
     // flags (52-55)
     *descriptor |= (uint64_t)(src.flags & 0x0F) << 52;
-
     // base bits 24-31 (56-63)
     *descriptor |= (uint64_t)((src.base >> 24) & 0xFF) << 56;
 }
 
-void gdt_init() {
+void load_gdt() {
 
     // we are going to not use segmentation (just paging)
     // so the only segment descriptors we need are the
@@ -77,18 +72,21 @@ void gdt_init() {
     encode_descriptor(&gdt.user_mode_ds, user_mode_ds);
 
     // prepare gdt descriptor (6 bytes: 16-bit limit and 32-bit base)
+    // the struct must be marked as packed to stop the compiler
+    // from adding padding, which would mess things up
     struct {
         uint16_t limit;
         uint32_t base;
     } __attribute__((packed)) gdtr;
 
+    // https://wiki.osdev.org/Global_Descriptor_Table#GDTR
     gdtr.limit = sizeof(struct flat_mode_gdt) - 1;
-    gdtr.base = (uint32_t)(uintptr_t)&gdt;
+    gdtr.base = (uint32_t)&gdt;
 
-    // load!!
+    // load it!!
     asm volatile("lgdt %0" : : "m"(gdtr));
 
     // if no triple fault has occurred, then we should be good to go.
-    // TODO: implement error handling
+    // TODO: implement sanity checks and error handing
     return;
 }

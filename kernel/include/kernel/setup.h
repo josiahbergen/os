@@ -1,2 +1,2 @@
 
-void gdt_init();
+void load_gdt();

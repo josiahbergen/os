@@ -13,7 +13,7 @@ void kernel_main(void) {
 
     // load global descriptor table
     KERNEL_LOG_BEG(LOG, "gdt init... ");
-    gdt_init();
+    load_gdt();
     KERNEL_LOG_END(SUCCESS, "ok");
 
     halt();

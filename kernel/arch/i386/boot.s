@@ -17,7 +17,7 @@ boot_page_table1:
 # Further page tables may be required if the kernel grows beyond 3 MiB.
 
 # The kernel entry point.
-.section .text, "a"
+.section .text
 .global _start
 .type _start, @function
 _start:
