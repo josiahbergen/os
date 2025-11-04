@@ -20,7 +20,7 @@ BOOT1 = $(BUILD_DIR)/boot/boot1.o
 KERNEL_BIN = $(BUILD_DIR)/kernel/kernel.bin
 DISK_IMG = $(BUILD_DIR)/disk/disk.img
 
-QEMU_FLAGS =
+QEMU_FLAGS = -serial stdio
 
 # Environment variables
 export HOST

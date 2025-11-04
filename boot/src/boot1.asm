@@ -40,9 +40,9 @@ b1_wait_key_loop:
     ; check for keypress
     mov ax, 0x0100
     int 0x16
-    cmp ax, 0x011b
+    cmp ax, 0x011b ; esc key
     je b1_main_menu_init
-    cmp ax, 0x1c0d
+    cmp ax, 0x1c0d ; enter key
     je b1_enter_protected_mode
 
     ; check status of event timer
@@ -492,4 +492,3 @@ pm_print_welcome:
     mov al, 'K'
     mov [0xb809e], ax
     ret
-

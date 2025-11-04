@@ -59,11 +59,15 @@ void terminal_putchar(char c) {
     if (c == *"\n") {
         ++terminal_row;
         terminal_column = 0;
+        outb(0x3F8, 0x0a);
+        outb(0x3F8, 0x0d);
         update_cursor(terminal_column, terminal_row);
         return;
     }
 
     terminal_putentryat(uc, terminal_color, terminal_column, terminal_row);
+    outb(0x3F8, c);
+
     if (++terminal_column == VGA_WIDTH) {
         terminal_column = 0;
         if (++terminal_row == VGA_HEIGHT)
@@ -82,8 +86,9 @@ void update_cursor(int x, int y) {
 }
 
 void terminal_write(const char *data, size_t size) {
-    for (size_t i = 0; i < size; i++)
+    for (size_t i = 0; i < size; i++) {
         terminal_putchar(data[i]);
+    }
 }
 
 void terminal_writestring(const char *data) {
