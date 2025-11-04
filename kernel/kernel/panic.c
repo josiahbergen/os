@@ -11,7 +11,7 @@ void panic(char *message) {
     terminal_setcolor(col);
     terminal_writestring("PANIC: ");
     terminal_writestring(message);
-    terminal_writestring("\neverything has gone terribly wrong");
+    terminal_writestring("\neverything has gone terribly wrong\n");
 
     // TODO: reboot computer?
 

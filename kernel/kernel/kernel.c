@@ -16,5 +16,10 @@ void kernel_main(void) {
     load_gdt();
     KERNEL_LOG_END(SUCCESS, "ok");
 
+    // load interrupt descriptor table
+    KERNEL_LOG_BEG(LOG, "idt init... ");
+    load_idt();
+    KERNEL_LOG_END(SUCCESS, "ok");
+
     halt();
 }
