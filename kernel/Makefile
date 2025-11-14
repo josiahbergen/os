@@ -6,7 +6,7 @@ BUILD_DIR = ../build/kernel
 SYSROOT = ../sysroot
 
 # flags
-CFLAGS = -m32 -ffreestanding -O2 -Wall -Wextra -I./include -I./arch/i386 -I$(SYSROOT)/usr/include
+CFLAGS = -mgeneral-regs-only -m32 -ffreestanding -O2 -Wall -Wextra -I./include -I./arch/i386 -I$(SYSROOT)/usr/include
 LDFLAGS = -m elf_i386 -T arch/i386/linker.ld -nostdlib -L$(SYSROOT)/usr/lib
 
 # get all source files

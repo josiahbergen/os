@@ -31,6 +31,8 @@ start:
     ; top of the stack is 0x0000:0x7c00
     print_string b1_s_enter_menu
 
+    jmp b1_enter_protected_mode
+
     mov ah, 0x00 ; get system timer
     int 0x1a
     mov bx, dx ; starting timer count (low 16 bits)

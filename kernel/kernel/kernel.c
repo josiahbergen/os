@@ -1,7 +1,6 @@
 
 #include <kernel/init.h>
 #include <kernel/logging.h>
-#include <kernel/setup.h>
 #include <kernel/tty.h>
 #include <kernel/util.h>
 
@@ -12,14 +11,9 @@ void kernel_main(void) {
     KERNEL_LOG(INFO, "hi marko!");
 
     // load global descriptor table
-    KERNEL_LOG_BEG(LOG, "gdt init... ");
     load_gdt();
-    KERNEL_LOG_END(SUCCESS, "ok");
-
     // load interrupt descriptor table
-    KERNEL_LOG_BEG(LOG, "idt init... ");
     load_idt();
-    KERNEL_LOG_END(SUCCESS, "ok");
 
     halt();
 }

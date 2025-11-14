@@ -1,3 +1,4 @@
+#include <kernel/logging.h>
 #include <kernel/util.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -8,6 +9,8 @@ struct idt_descriptor {
     uint16_t size;
     uint32_t offset;
 };
+
+struct segment_selector {};
 
 // the total entry is 64 bits long
 struct pretty_gate_descriptor {
@@ -32,7 +35,11 @@ uint64_t encode_gate_descriptor() {
     return desc;
 }
 
-void load_idt() { panic("idt not implemented"); }
+void load_idt() {
+    KERNEL_LOG_BEG(LOG, "idt init... ");
+    panic("no idt");
+    KERNEL_LOG_END(PANIC, "error");
+}
 
 // struct interrupt_frame {
 //     uint32_t ip;
@@ -42,7 +49,9 @@ void load_idt() { panic("idt not implemented"); }
 //     uint32_t ss;
 // };
 
-// __attribute__((interrupt)) void
-// interrupt_handler(struct interrupt_frame *frame) {
-//     printf("interrupt called: %p", frame);
-// }
+struct interrupt_frame;
+
+__attribute__((interrupt)) void
+interrupt_handler(struct interrupt_frame *frame) {
+    printf("%p", frame);
+}

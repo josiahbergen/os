@@ -1,31 +1,31 @@
-# small os hobby project
+## small os hobby project
 
-featuring a custom 32-bit x86 operating system kernel, two-stage MBR bootloader with TUI, and am easy cross-compiler toolchain
+featuring a custom 32-bit x86 operating system kernel, custom two-stage MBR bootloader, and am easy(ish) cross-compiler toolchain!
 
-the eventual goal is to get a small kernel working that is capable of:
+the eventual goal is to create a small higher-half kernel that is capable of:
 
 - running a shell
 - memory paging
 - reading and running binary files from a filesystem
 
-### prerequisites
+### quickstart (macos only!)
 
-- `i686-elf-gcc` cross-compiler toolchain
-- `nasm` assembler
-- `qemu-system-i386` for testing
-- standard unix tools (`make`, `dd`, `stat`)
-
-cross-compiler toolchain script coming soon...
-
-### quickstart
+firstly, install homebrew if you don't have it already: https://brew.sh
 
 ```bash
+brew install i686-elf-gcc i686-elf-binutils nasm qemu
+
+# optional deps (try these if i686-elf-gcc isn't installing)
+# brew install pkgconf texinfo zstd
+
 # build everything and lauch qemu
-make
-# it's that easy!
+make # it's that easy!
+```
 
-# there are a few other make targets, too...
+there are a few other make targets, too...
 
+```bash
+# the build system automatically handles any dependencies.
 make all           # build everything (default)
 make help          # show available targets
 make clean         # clean all build artifacts
@@ -36,19 +36,9 @@ make boot          # build bootloader
 make kernel        # build kernel
 make disk          # create disk image
 make qemu          # launch qemu
-
 ```
 
-### build dependencies
-
-the build system automatically handles dependencies:
-
-- `qemu` depends on `disk`
-- `disk` depends on `boot` and `kernel`
-- `kernel` depends on `libc` (headers and library)
-- `libc` depends on `headers`
-
-## file structure
+### file structure
 
 ```
 os/

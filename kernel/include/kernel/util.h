@@ -1,4 +1,6 @@
 
 void panic(char *message);
 void halt();
-void reset();
+
+void arch_halt();
+void arch_reset();

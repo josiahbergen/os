@@ -35,7 +35,7 @@ export EXEC_PREFIX = $(PREFIX)
 export BOOTDIR = /boot
 export LIBDIR = $(EXEC_PREFIX)/lib
 export INCLUDEDIR = $(PREFIX)/include
-export CFLAGS = -O2 -g
+export CFLAGS = -mgeneral-regs-only
 export CPPFLAGS =
 
 # Work around that the -elf gcc targets doesn't have a system include directory

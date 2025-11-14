@@ -53,6 +53,7 @@ void load_gdt() {
     // table layout:
     // https://wiki.osdev.org/GDT_Tutorial#Flat_/_Long_Mode_Setup
 
+    KERNEL_LOG_BEG(LOG, "gdt init... ");
     asm volatile("cli"); // disable interrupts
 
     struct pretty_gdt_entry null_segment = {0, 0, 0, 0};
@@ -86,7 +87,11 @@ void load_gdt() {
     // load it!!
     asm volatile("lgdt %0" : : "m"(gdtr));
 
+    // reload segment registers, hopefully
+    KERNEL_LOG_END(SUCCESS, "ok");
+
     // if no triple fault has occurred, then we should be good to go.
     // TODO: implement sanity checks and error handing
+    KERNEL_LOG(WARN, "segment registers not reloaded");
     return;
 }
