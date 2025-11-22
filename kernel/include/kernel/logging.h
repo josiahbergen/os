@@ -6,7 +6,7 @@
 #define LOG_COL_LOG 0x7
 #define LOG_COL_WARN 0xe
 #define LOG_COL_ERROR 0xc
-#define LOG_COL_PANIC 0xc
+#define LOG_COL_PANIC 0x4f
 #define LOG_COL_SUCCESS 0x2
 
 /*

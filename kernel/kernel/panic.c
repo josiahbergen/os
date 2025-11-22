@@ -5,15 +5,14 @@
 void panic(char *message) {
 
     uint8_t col = 0x4f;
+    uint8_t old_col = 0x8;
 
-    terminal_fill_lines(23, 3, col);
-    terminal_setcursor(0, 23);
     terminal_setcolor(col);
-    terminal_writestring("PANIC: ");
+    terminal_writestring("kernel :: panic!\nkernel :: ");
     terminal_writestring(message);
-    terminal_writestring("\neverything has gone terribly wrong\n");
+    terminal_setcolor(old_col);
+    terminal_writestring("\nkernel :: everything has gone terribly wrong\n");
 
     // TODO: reboot computer?
-
     halt();
 }

@@ -8,7 +8,12 @@
 #define TERMINAL_HEIGHT = 25;
 
 void terminal_initialize(void);
+void terminal_scroll(int lines);
 void terminal_fill_lines(uint8_t start, uint8_t end, uint8_t col);
+
+size_t terminal_getx();
+size_t terminal_gety();
+uint8_t terminal_getcolor();
 
 void terminal_setcursor(int x, int y);
 void terminal_setcolor(uint8_t col);

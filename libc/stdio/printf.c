@@ -92,6 +92,44 @@ int printf(const char *restrict format, ...) {
             if (!print(buffer, len))
                 return -1;
             written += len;
+        } else if (*format == 'd' || *format == 'i') {
+            format++;
+
+            int val = va_arg(parameters, int);
+
+            char buffer[32]; // plenty for 32-bit or 64-bit ints
+            char *p = &buffer[31];
+            *p = '\0';
+
+            bool neg = false;
+            unsigned int u;
+
+            if (val < 0) {
+                neg = true;
+                u = (unsigned int)(-val);
+            } else {
+                u = (unsigned int)val;
+            }
+
+            // convert to decimal (in reverse)
+            do {
+                *--p = (u % 10) + '0';
+                u /= 10;
+            } while (u > 0);
+
+            if (neg) {
+                *--p = '-';
+            }
+
+            size_t len = strlen(p);
+
+            if (maxrem < len) {
+                return -1; // overflow
+            }
+            if (!print(p, len))
+                return -1;
+
+            written += len;
         } else {
             format = format_begun_at;
             size_t len = strlen(format);

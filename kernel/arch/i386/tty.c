@@ -30,6 +30,19 @@ void terminal_initialize(void) {
     }
 }
 
+void terminal_scroll(int lines) {
+
+    size_t row_size = VGA_WIDTH * sizeof(uint16_t);
+    size_t total_size = row_size * VGA_HEIGHT;
+
+    for (int i = 0; i < lines; i++) {
+        // clear the first row
+        memset(VGA_MEMORY, 0, row_size);
+        // copy all rows one up
+        memmove(VGA_MEMORY, VGA_MEMORY + row_size, total_size - row_size);
+    }
+}
+
 void terminal_fill_lines(uint8_t start, uint8_t num, uint8_t col) {
     terminal_buffer = VGA_MEMORY;
     for (size_t y = start; y < VGA_HEIGHT && y < start + num; y++) {
@@ -41,6 +54,10 @@ void terminal_fill_lines(uint8_t start, uint8_t num, uint8_t col) {
 }
 
 void terminal_setcolor(uint8_t color) { terminal_color = color; }
+uint8_t terminal_getcolor() { return terminal_color; }
+
+size_t terminal_getx() { return terminal_column; }
+size_t terminal_gety() { return terminal_row; }
 
 void terminal_setcursor(int x, int y) {
     terminal_column = x;

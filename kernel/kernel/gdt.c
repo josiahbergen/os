@@ -54,7 +54,7 @@ void load_gdt() {
     // https://wiki.osdev.org/GDT_Tutorial#Flat_/_Long_Mode_Setup
 
     KERNEL_LOG_BEG(LOG, "gdt init... ");
-    asm volatile("cli"); // disable interrupts
+    asm("cli"); // disable interrupts
 
     struct pretty_gdt_entry null_segment = {0, 0, 0, 0};
     struct pretty_gdt_entry kernel_mode_cs = {0, 0xFFFFF, 0x9A, 0x0C};
@@ -65,7 +65,7 @@ void load_gdt() {
     // TODO: add task state segment
     // struct pretty_gdt_entry p_task_state_segment = {0, 0, 0x89, 0x0};
 
-    struct flat_mode_gdt gdt;
+    static struct flat_mode_gdt gdt;
     encode_descriptor(&gdt.null_segment, null_segment);
     encode_descriptor(&gdt.kernel_mode_cs, kernel_mode_cs);
     encode_descriptor(&gdt.kernel_mode_ds, kernel_mode_ds);
@@ -78,16 +78,14 @@ void load_gdt() {
     struct {
         uint16_t limit;
         uint32_t base;
-    } __attribute__((packed)) gdtr;
+    } PACKED gdtr;
 
     // https://wiki.osdev.org/Global_Descriptor_Table#GDTR
     gdtr.limit = sizeof(struct flat_mode_gdt) - 1;
     gdtr.base = (uint32_t)&gdt;
 
     // load it!!
-    asm volatile("lgdt %0" : : "m"(gdtr));
-
-    // reload segment registers, hopefully
+    asm("lgdt %0" : : "m"(gdtr));
     KERNEL_LOG_END(SUCCESS, "ok");
 
     // if no triple fault has occurred, then we should be good to go.
